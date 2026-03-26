@@ -53,25 +53,40 @@ include '../includes/header.php';
     </button>
 </div>
 
-<div class="card p-3 mb-4">
-    <form method="GET" class="row g-3 align-items-end">
-        <div class="col-md-3">
-            <label class="form-label text-secondary">Status</label>
-            <select name="status" class="form-select bg-navy text-white border-secondary">
-                <option value="">Todos</option>
-                <option value="active" <?php echo $status == 'active' ? 'selected' : ''; ?>>Ativos</option>
-                <option value="expiring" <?php echo $status == 'expiring' ? 'selected' : ''; ?>>Vencendo</option>
-                <option value="expired" <?php echo $status == 'expired' ? 'selected' : ''; ?>>Vencidos</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label class="form-label text-secondary">Categoria</label>
-            <input type="text" name="categoria" class="form-control bg-navy text-white border-secondary" placeholder="Ex: Software" value="<?php echo $categoria; ?>">
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-info w-100">Filtrar</button>
-        </div>
-    </form>
+<h4 class="fw-bold mb-4">Relatórios de Atividade</h4>
+<div class="card bg-navy border-0 rounded-4 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small text-uppercase fw-bold opacity-75">Status</label>
+                <select name="status" class="form-select border-secondary">
+                    <option value="">Todos os Status</option>
+                    <option value="active" <?php echo $status == 'active' ? 'selected' : ''; ?>>Ativos</option>
+                    <option value="expiring" <?php echo $status == 'expiring' ? 'selected' : ''; ?>>Vencendo em breve</option>
+                    <option value="expired" <?php echo $status == 'expired' ? 'selected' : ''; ?>>Expirados</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-uppercase fw-bold opacity-75">Categoria</label>
+                <select name="categoria" class="form-select border-secondary">
+                    <option value="">Todas as Categorias</option>
+                    <option value="Software" <?php echo $categoria == 'Software' ? 'selected' : ''; ?>>Software</option>
+                    <option value="Hardware" <?php echo $categoria == 'Hardware' ? 'selected' : ''; ?>>Hardware</option>
+                    <option value="Serviços" <?php echo $categoria == 'Serviços' ? 'selected' : ''; ?>>Serviços</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-info w-100 fw-bold px-4 py-2 mt-2">
+                    <i class="fas fa-filter me-2"></i> Filtrar agora
+                </button>
+            </div>
+            <div class="col-md-3">
+                <button type="button" onclick="window.print()" class="btn btn-outline-info w-100 fw-bold px-4 py-2 mt-2">
+                    <i class="fas fa-print me-2"></i> Impressão / PDF
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="card bg-navy border-0 rounded-4 shadow-sm overflow-hidden">

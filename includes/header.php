@@ -25,7 +25,7 @@ require_once __DIR__ . '/functions.php';
             <p class="nav-section-title">Principal</p>
             <nav class="nav flex-column">
                 <a href="<?php echo APP_URL; ?>/index.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-grid-2"></i> <span class="nav-text">Dashboard</span>
+                    <i class="fas fa-table-columns"></i> <span class="nav-text">Dashboard</span>
                 </a>
                 <a href="<?php echo APP_URL; ?>/pages/contratos.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'contratos.php' ? 'active' : ''; ?>">
                     <i class="fas fa-file-invoice-dollar"></i> <span class="nav-text">Contratos</span>
