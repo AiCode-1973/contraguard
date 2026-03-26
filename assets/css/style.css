@@ -248,13 +248,14 @@ body {
 }
 
 .table-dark-custom thead th {
-    background-color: var(--bg-light-navy) !important;
-    color: var(--text-secondary) !important;
+    background-color: #0d1b2a !important; /* Um azul marinho ainda mais profundo */
+    color: var(--electric-blue) !important; /* Azul elétrico para o texto do cabeçalho */
     text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 1px;
-    border-bottom: 1px solid var(--border-color) !important;
-    padding: 1.25rem 1rem !important;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    border-bottom: 2px solid var(--border-color) !important;
+    padding: 1.5rem 1rem !important;
 }
 
 .table-dark-custom td {
