@@ -55,7 +55,7 @@ include '../includes/header.php';
             <div class="alert alert-success m-3"><?php echo $_GET['msg'] ?? $msg; ?></div>
         <?php endif; ?>
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover table-dark-custom align-middle mb-0">
                 <thead>
                     <tr>
                         <th class="ps-3">Equipamento</th>

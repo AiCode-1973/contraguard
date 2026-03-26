@@ -74,10 +74,10 @@ include '../includes/header.php';
     </form>
 </div>
 
-<div class="card">
+<div class="card bg-navy border-0 rounded-4 shadow-sm overflow-hidden">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0">
+            <table class="table table-hover table-dark-custom align-middle mb-0">
                 <thead>
                     <tr>
                         <th class="ps-3">Tipo</th>
