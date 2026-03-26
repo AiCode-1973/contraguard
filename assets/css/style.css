@@ -334,8 +334,11 @@ body {
     border-spacing: 0;
 }
 
+.table-dark-custom thead, 
+.table-dark-custom thead tr, 
 .table-dark-custom thead th {
-    background: linear-gradient(180deg, #162a45 0%, #0d1b2a 100%) !important;
+    background: #0d1b2a !important;
+    background-color: #0d1b2a !important;
     color: var(--accent-blue) !important;
     text-transform: uppercase;
     font-size: 0.85rem;
