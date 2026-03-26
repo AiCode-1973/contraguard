@@ -7,7 +7,12 @@ define('DB_NAME', 'dema5738_contraguard');
 
 // Configurações do App
 define('APP_NAME', 'ContraGuard');
-define('APP_URL', 'http://localhost/contraguard');
+// Configurações dinâmicas de URL
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+$domainName = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$baseUrl = ($domainName == 'localhost' || $domainName == '127.0.0.1') ? $protocol . $domainName . '/contraguard' : $protocol . $domainName;
+
+define('APP_URL', $baseUrl);
 
 // Fuso Horário
 date_default_timezone_set('America/Sao_Paulo');
