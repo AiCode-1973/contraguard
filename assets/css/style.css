@@ -1,5 +1,92 @@
-/* Premium SaaS Style for ContraGuard */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* Login Page Specifics */
+.login-body {
+    background: radial-gradient(circle at top right, #1a365d 0%, var(--bg-dark) 60%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.login-card {
+    background: rgba(17, 34, 64, 0.8);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 40px 100px -20px rgba(2, 12, 27, 0.7);
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.login-logo {
+    font-size: 3rem;
+    color: var(--electric-blue);
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 10px rgba(0, 223, 216, 0.3));
+}
+
+.login-input-group {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.login-input-group i {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.login-input-group input {
+    width: 100%;
+    background: rgba(2, 12, 27, 0.3);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    padding: 1.1rem 1.1rem 1.1rem 3.2rem;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.login-input-group input:focus {
+    background: rgba(2, 12, 27, 0.5);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 4px rgba(100, 255, 218, 0.1);
+    outline: none;
+}
+
+.login-btn {
+    background: linear-gradient(135deg, var(--electric-blue) 0%, #00a8ff 100%);
+    border: none;
+    border-radius: 15px;
+    padding: 1.1rem;
+    color: var(--bg-dark);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 223, 216, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .sidebar { width: 80px; padding: 1rem; }
+    .logo-text, .nav-text, .nav-section-title { display: none; }
+    .main-content { margin-left: 80px; }
+    .nav-link { justify-content: center; padding: 1rem; }
+}
 
 :root {
     --bg-dark: #0a192f;
@@ -248,13 +335,13 @@ body {
 }
 
 .table-dark-custom thead th {
-    background-color: #0d1b2a !important; /* Um azul marinho ainda mais profundo */
-    color: var(--electric-blue) !important; /* Azul elétrico para o texto do cabeçalho */
+    background: linear-gradient(180deg, #162a45 0%, #0d1b2a 100%) !important;
+    color: var(--accent-blue) !important;
     text-transform: uppercase;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    border-bottom: 2px solid var(--border-color) !important;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    border-bottom: 3px solid var(--electric-blue) !important;
     padding: 1.5rem 1rem !important;
 }
 
