@@ -95,51 +95,50 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Modal Garantia -->
 <div class="modal fade" id="modalGarantia" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-content">
             <form method="POST">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title" id="modalTitle">Cadastrar Garantia</h5>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Cadastrar Nova Garantia</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="id" id="edit_id">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Equipamento</label>
-                            <input type="text" name="nome_equipamento" id="edit_nome" class="form-control bg-navy text-white border-secondary" required>
+                    <div class="row g-4">
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-laptop me-2"></i> Nome do Equipamento</label>
+                            <input type="text" name="nome_equipamento" id="edit_nome_equipamento" class="form-control" placeholder="Ex: Notebook Dell XPS" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Nº de Série</label>
-                            <input type="text" name="numero_serie" id="edit_serial" class="form-control bg-navy text-white border-secondary">
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-barcode me-2"></i> Número de Série</label>
+                            <input type="text" name="numero_serie" id="edit_numero_serie" class="form-control" placeholder="Ex: SN12345678">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Data de Compra</label>
-                            <input type="date" name="data_compra" id="edit_compra" class="form-control bg-navy text-white border-secondary">
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-calendar-alt me-2"></i> Data da Compra</label>
+                            <input type="date" name="data_compra" id="edit_data_compra" class="form-control">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Expira Garantia</label>
-                            <input type="date" name="expira_garantia" id="edit_expira" class="form-control bg-navy text-white border-secondary" required>
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-calendar-check me-2"></i> Expiração da Garantia</label>
+                            <input type="date" name="expira_garantia" id="edit_expira_garantia" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Fornecedor</label>
-                            <input type="text" name="fornecedor" id="edit_fornecedor" class="form-control bg-navy text-white border-secondary">
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-industry me-2"></i> Fornecedor</label>
+                            <input type="text" name="fornecedor" id="edit_fornecedor" class="form-control" placeholder="Ex: Dell Inc">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Responsável</label>
-                            <input type="text" name="responsavel" id="edit_responsavel" class="form-control bg-navy text-white border-secondary">
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-user-circle me-2"></i> Responsável</label>
+                            <input type="text" name="responsavel" id="edit_responsavel" class="form-control" placeholder="Ex: Alice">
                         </div>
-                        <div class="col-12">
-                            <label class="form-label">Observações</label>
-                            <textarea name="observacoes" id="edit_observacoes" class="form-control bg-navy text-white border-secondary"></textarea>
+                        <div class="col-12 text-start">
+                            <label class="form-label"><i class="fas fa-clipboard-list me-2"></i> Observações</label>
+                            <textarea name="observacoes" id="edit_observacoes" class="form-control" rows="3" placeholder="Status do item, histórico..."></textarea>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-secondary">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-info fw-bold">Salvar</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary px-4 rounded-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-info px-5 rounded-3 fw-bold shadow-sm">Salvar Garantia</button>
                 </div>
             </form>
         </div>
@@ -150,10 +149,10 @@ include '../includes/header.php';
 function editarGarantia(g) {
     document.getElementById('modalTitle').innerText = 'Editar Garantia';
     document.getElementById('edit_id').value = g.id;
-    document.getElementById('edit_nome').value = g.nome_equipamento;
-    document.getElementById('edit_serial').value = g.numero_serie;
-    document.getElementById('edit_compra').value = g.data_compra;
-    document.getElementById('edit_expira').value = g.expira_garantia;
+    document.getElementById('edit_nome_equipamento').value = g.nome_equipamento;
+    document.getElementById('edit_numero_serie').value = g.numero_serie;
+    document.getElementById('edit_data_compra').value = g.data_compra;
+    document.getElementById('edit_expira_garantia').value = g.expira_garantia;
     document.getElementById('edit_fornecedor').value = g.fornecedor;
     document.getElementById('edit_responsavel').value = g.responsavel;
     document.getElementById('edit_observacoes').value = g.observacoes;

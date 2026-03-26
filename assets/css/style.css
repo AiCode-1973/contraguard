@@ -370,6 +370,57 @@ body {
     color: var(--text-primary) !important;
 }
 
+/* Premium Modal & Form Controls */
+.modal-content {
+    background: var(--bg-navy) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 30px 60px -12px rgba(2, 12, 27, 0.6) !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 2rem !important;
+}
+
+.modal-title {
+    color: var(--electric-blue) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+}
+
+.modal-body {
+    padding: 2.5rem !important;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color) !important;
+    padding: 1.5rem 2rem !important;
+}
+
+.form-label {
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+    font-size: 0.9rem !important;
+    margin-bottom: 0.6rem !important;
+}
+
+.modal .form-control, .modal .form-select {
+    background: rgba(2, 12, 27, 0.3) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    color: var(--text-primary) !important;
+    padding: 0.75rem 1rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.modal .form-control:focus, .modal .form-select:focus {
+    background: rgba(2, 12, 27, 0.5) !important;
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 0 4px rgba(100, 255, 218, 0.1) !important;
+    outline: none !important;
+}
+
 .sidebar .btn-info {
     background-color: var(--electric-blue) !important;
     border-color: var(--electric-blue) !important;

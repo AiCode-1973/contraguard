@@ -95,56 +95,55 @@ include '../includes/header.php';
     </div>
 </div>
 
-<!-- Modal Contrato -->
 <div class="modal fade" id="modalContrato" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-content">
             <form method="POST">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title" id="modalTitle">Cadastrar Contrato</h5>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Cadastrar Novo Contrato</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="id" id="edit_id">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Nome do Contrato</label>
-                            <input type="text" name="nome" id="edit_nome" class="form-control bg-navy text-white border-secondary" required>
+                    <div class="row g-4">
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-file-signature me-2"></i> Nome do Contrato</label>
+                            <input type="text" name="nome" id="edit_nome" class="form-control" placeholder="Ex: Manutenção Mensal" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Fornecedor</label>
-                            <input type="text" name="fornecedor" id="edit_fornecedor" class="form-control bg-navy text-white border-secondary">
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-building me-2"></i> Fornecedor</label>
+                            <input type="text" name="fornecedor" id="edit_fornecedor" class="form-control" placeholder="Ex: Dell Technologies">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Data Início</label>
-                            <input type="date" name="data_inicio" id="edit_data_inicio" class="form-control bg-navy text-white border-secondary">
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-calendar-alt me-2"></i> Data Início</label>
+                            <input type="date" name="data_inicio" id="edit_data_inicio" class="form-control">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Data Fim</label>
-                            <input type="date" name="data_fim" id="edit_data_fim" class="form-control bg-navy text-white border-secondary" required>
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-calendar-check me-2"></i> Data Fim (Vencimento)</label>
+                            <input type="date" name="data_fim" id="edit_data_fim" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Categoria</label>
-                            <select name="categoria" id="edit_categoria" class="form-select bg-navy text-white border-secondary">
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-tags me-2"></i> Categoria</label>
+                            <select name="categoria" id="edit_categoria" class="form-select">
                                 <option value="Software">Software</option>
                                 <option value="Hardware">Hardware</option>
                                 <option value="Serviços">Serviços</option>
-                                <option value="Infraestrutura">Infraestrutura</option>
+                                <option value="Outros">Outros</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Responsável</label>
-                            <input type="text" name="responsavel" id="edit_responsavel" class="form-control bg-navy text-white border-secondary">
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-user-tie me-2"></i> Responsável</label>
+                            <input type="text" name="responsavel" id="edit_responsavel" class="form-control" placeholder="Ex: Demetrius">
                         </div>
-                        <div class="col-12">
-                            <label class="form-label">Observações</label>
-                            <textarea name="observacoes" id="edit_observacoes" class="form-control bg-navy text-white border-secondary"></textarea>
+                        <div class="col-12 text-start">
+                            <label class="form-label"><i class="fas fa-comment-dots me-2"></i> Observações</label>
+                            <textarea name="observacoes" id="edit_observacoes" class="form-control" rows="3" placeholder="Detalhes adicionais..."></textarea>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-secondary">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-info fw-bold">Salvar</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary px-4 rounded-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-info px-5 rounded-3 fw-bold shadow-sm">Salvar Registro</button>
                 </div>
             </form>
         </div>
