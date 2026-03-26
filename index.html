@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContraGuard | Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <i class="fas fa-shield-alt"></i>
+                <span class="logo-text">ContraGuard</span>
+            </div>
+            
+            <nav class="filter-group">
+                <h3>Menu Principal</h3>
+                <button class="filter-item active">
+                    <i class="fas fa-th-large"></i>
+                    <span class="filter-text">Visão Geral</span>
+                </button>
+                <button class="filter-item">
+                    <i class="fas fa-file-contract"></i>
+                    <span class="filter-text">Contratos</span>
+                </button>
+                <button class="filter-item">
+                    <i class="fas fa-tools"></i>
+                    <span class="filter-text">Equipamentos</span>
+                </button>
+            </nav>
+
+            <div class="filter-group">
+                <h3>Filtros</h3>
+                <div class="filter-group">
+                    <select class="search-bar" style="width: 100%; margin-bottom: 0.5rem; background: var(--bg-light-navy);">
+                        <option value="">Todas as Categorias</option>
+                        <option value="software">Software</option>
+                        <option value="hardware">Hardware</option>
+                        <option value="facility">Infraestrutura</option>
+                    </select>
+                    <select class="search-bar" style="width: 100%; margin-bottom: 0.5rem; background: var(--bg-light-navy);">
+                        <option value="">Todos os Departamentos</option>
+                        <option value="it">Departamento de TI</option>
+                        <option value="ops">Operações</option>
+                        <option value="hr">Recursos Humanos</option>
+                    </select>
+                    <input type="date" class="search-bar" style="width: 100%; background: var(--bg-light-navy);">
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div>
+                    <h1 style="font-size: 1.5rem; color: var(--text-primary);">Visão Geral do Dashboard</h1>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Bem-vindo de volta, Administrador</p>
+                </div>
+                
+                <div class="user-profile">
+                    <input type="text" class="search-bar" placeholder="Pesquisar contratos, alertas...">
+                    <div class="notification-bell">
+                        <i class="far fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-blue); display: flex; align-items: center; justify-content: center; color: var(--bg-dark); font-weight: bold;">
+                        AD
+                    </div>
+                </div>
+            </header>
+
+            <!-- Statistics -->
+            <section style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
+                <div class="card" style="padding: 1rem; text-align: center;">
+                    <p style="color: var(--text-secondary); font-size: 0.8rem;">Total Ativos</p>
+                    <p style="font-size: 1.5rem; font-weight: 700;">124</p>
+                </div>
+                <div class="card" style="padding: 1rem; text-align: center; border-left: 4px solid var(--status-expiring);">
+                    <p style="color: var(--text-secondary); font-size: 0.8rem;">Vencendo em Breve</p>
+                    <p style="font-size: 1.5rem; font-weight: 700; color: var(--status-expiring);">12</p>
+                </div>
+                <div class="card" style="padding: 1rem; text-align: center; border-left: 4px solid var(--status-expired);">
+                    <p style="color: var(--text-secondary); font-size: 0.8rem;">Vencidos</p>
+                    <p style="font-size: 1.5rem; font-weight: 700; color: var(--status-expired);">3</p>
+                </div>
+                <div class="card" style="padding: 1rem; text-align: center;">
+                    <p style="color: var(--text-secondary); font-size: 0.8rem;">Economia (MoM)</p>
+                    <p style="font-size: 1.5rem; font-weight: 700; color: var(--status-active);">+14%</p>
+                </div>
+            </section>
+
+            <h2 style="font-size: 1.25rem; font-weight: 600;">Alertas Críticos & Renovações Próximas</h2>
+            
+            <div id="dashboard-grid" class="dashboard-grid">
+                <!-- Cards will be injected by script.js -->
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

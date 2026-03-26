@@ -1,0 +1,83 @@
+/* Custom Styles for ContraGuard PHP */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-dark: #0a192f;
+    --bg-navy: #112240;
+    --bg-light-navy: #233554;
+    --accent-blue: #64ffda;
+    --electric-blue: #00dfd8;
+    --text-primary: #e6f1ff;
+    --text-secondary: #8892b0;
+    
+    --status-expired: #ff4d4d;
+    --status-expiring: #ffa500;
+    --status-active: #2ecc71;
+    
+    --border-color: rgba(100, 255, 218, 0.1);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+}
+
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--bg-navy);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    height: 100vh;
+    z-index: 1000;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 250px;
+    padding: 2rem;
+}
+
+.nav-link {
+    transition: all 0.2s;
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+.nav-link:hover, .nav-link.active {
+    background-color: var(--bg-light-navy);
+    color: var(--accent-blue) !important;
+}
+
+.card {
+    background-color: var(--bg-navy);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 12px;
+}
+
+.card-title { color: var(--text-secondary); font-size: 0.9rem; }
+.card-value { font-size: 1.5rem; font-weight: 700; }
+
+.table { color: var(--text-primary); }
+.table thead th { border-bottom: 2px solid var(--border-color); color: var(--text-secondary); }
+.table td { border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+
+.expired { border-left: 4px solid var(--status-expired); }
+.expiring { border-left: 4px solid var(--status-expiring); }
+.active { border-left: 4px solid var(--status-active); }
+
+.badge-expired { background-color: var(--status-expired); }
+.badge-expiring { background-color: var(--status-expiring); }
+.badge-active { background-color: var(--status-active); }
+
+/* Login Page Styles */
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+}
