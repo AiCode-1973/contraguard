@@ -41,23 +41,21 @@ $contratos = $pdo->query("SELECT * FROM contratos ORDER BY data_fim ASC")->fetch
 include '../includes/header.php';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Gestão de Contratos</h2>
-    <?php if (isAdmin()): ?>
-    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalContrato">
-        <i class="fas fa-plus me-2"></i> Novo Contrato
-    </button>
-    <?php endif; ?>
-</div>
-
-<?php if (isset($_GET['msg']) || $msg): ?>
-    <div class="alert alert-success"><?php echo $_GET['msg'] ?? $msg; ?></div>
-<?php endif; ?>
-
-<div class="card">
+<div class="card bg-navy border-0 rounded-4 shadow-sm mt-4">
+    <div class="card-header bg-transparent border-bottom border-secondary d-flex justify-content-between align-items-center p-4">
+        <h4 class="m-0 fw-bold">Gestão de Contratos</h4>
+        <?php if (isAdmin()): ?>
+        <button class="btn btn-info fw-bold px-4" data-bs-toggle="modal" data-bs-target="#modalContrato">
+            <i class="fas fa-plus me-2"></i> Novo Contrato
+        </button>
+        <?php endif; ?>
+    </div>
     <div class="card-body p-0">
+        <?php if (isset($_GET['msg']) || $msg): ?>
+            <div class="alert alert-success m-3"><?php echo $_GET['msg'] ?? $msg; ?></div>
+        <?php endif; ?>
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover table-dark-custom align-middle mb-0">
                 <thead>
                     <tr>
                         <th class="ps-3">Nome</th>
