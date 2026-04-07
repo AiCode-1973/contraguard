@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($user && password_verify($senha, $user['senha'])) {
             $_SESSION['usuario_id'] = $user['id'];
-            $_SESSION['usuario_nome'] = $user['usuario'];
+            $_SESSION['usuario_nome'] = !empty($user['nome']) ? $user['nome'] : $user['usuario'];
             $_SESSION['usuario_nivel'] = $user['nivel'];
             header('Location: index.php');
             exit;

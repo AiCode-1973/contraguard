@@ -42,6 +42,15 @@ require_once __DIR__ . '/functions.php';
                 </a>
             </nav>
 
+            <?php if (isAdmin()): ?>
+            <p class="nav-section-title">Administração</p>
+            <nav class="nav flex-column">
+                <a href="<?php echo APP_URL; ?>/pages/usuarios.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'usuarios.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-users-gear"></i> <span class="nav-text">Usuários</span>
+                </a>
+            </nav>
+            <?php endif; ?>
+
             <div class="mt-auto">
                 <p class="nav-section-title">Filtros Rápidos</p>
                 <form action="<?php echo APP_URL; ?>/index.php" method="GET" class="p-2">
