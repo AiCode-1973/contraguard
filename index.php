@@ -32,9 +32,9 @@ $vencidos = $pdo->query("SELECT (SELECT COUNT(*) FROM contratos WHERE status = '
 
 // Buscar Itens para o Grid
 $query = "
-    (SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as data, status, responsavel, categoria FROM contratos $where)
+    (SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as data, status, responsavel, categoria, tipo_contrato, qtd_anos FROM contratos $where)
     UNION
-    (SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as data, status, responsavel, 'Hardware' as categoria FROM garantias)
+    (SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as data, status, responsavel, 'Hardware' as categoria, NULL as tipo_contrato, NULL as qtd_anos FROM garantias)
     ORDER BY data ASC LIMIT 12
 ";
 $items = $pdo->prepare($query);
@@ -107,6 +107,9 @@ include 'includes/header.php';
             
             <h5 class="card-title text-truncate"><?php echo $item['nome']; ?></h5>
             <p class="card-subtitle"><?php echo $item['fornecedor']; ?> • <?php echo $item['responsavel']; ?></p>
+            <?php if (!empty($item['tipo_contrato'])): ?>
+            <span class="badge bg-info text-dark mt-1" style="font-size:0.65rem;"><i class="fas fa-rotate me-1"></i><?php echo formatarTipoContrato($item['tipo_contrato'], $item['qtd_anos']); ?></span>
+            <?php endif; ?>
             
             <div class="mt-4">
                 <div class="card-progress-label">

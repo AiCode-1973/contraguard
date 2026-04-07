@@ -27,6 +27,13 @@ function getStatusLabel($status) {
     }
 }
 
+function formatarTipoContrato($tipo, $qtd_anos) {
+    if ($tipo === 'Personalizado' && $qtd_anos) {
+        return $qtd_anos . ' ' . ($qtd_anos == 1 ? 'Ano' : 'Anos');
+    }
+    return $tipo;
+}
+
 function verificarLogin() {
     if (!isset($_SESSION['usuario_id'])) {
         header('Location: ' . APP_URL . '/login.php');

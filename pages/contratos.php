@@ -8,6 +8,12 @@ $colunas_c = $pdo->query("SHOW COLUMNS FROM contratos")->fetchAll(PDO::FETCH_COL
 if (!in_array('valor', $colunas_c)) {
     $pdo->exec("ALTER TABLE contratos ADD COLUMN valor DECIMAL(15,2) DEFAULT NULL");
 }
+if (!in_array('tipo_contrato', $colunas_c)) {
+    $pdo->exec("ALTER TABLE contratos ADD COLUMN tipo_contrato VARCHAR(20) DEFAULT NULL");
+}
+if (!in_array('qtd_anos', $colunas_c)) {
+    $pdo->exec("ALTER TABLE contratos ADD COLUMN qtd_anos INT DEFAULT NULL");
+}
 
 $pdo->exec("CREATE TABLE IF NOT EXISTS contrato_anexos (
     id          INT AUTO_INCREMENT PRIMARY KEY,
@@ -79,15 +85,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($valor !== null) {
         $valor = str_replace(',', '.', str_replace('.', '', $valor));
     }
+    $tipo_contrato = !empty($_POST['tipo_contrato']) ? $_POST['tipo_contrato'] : null;
+    $qtd_anos      = ($tipo_contrato === 'Personalizado' && !empty($_POST['qtd_anos'])) ? (int)$_POST['qtd_anos'] : null;
 
     if ($id) {
-        $stmt = $pdo->prepare("UPDATE contratos SET nome=?, fornecedor=?, data_inicio=?, data_fim=?, categoria=?, responsavel=?, observacoes=?, valor=? WHERE id=?");
-        $stmt->execute([$nome, $fornecedor, $data_inicio, $data_fim, $categoria, $responsavel, $observacoes, $valor, $id]);
+        $stmt = $pdo->prepare("UPDATE contratos SET nome=?, fornecedor=?, data_inicio=?, data_fim=?, categoria=?, responsavel=?, observacoes=?, valor=?, tipo_contrato=?, qtd_anos=? WHERE id=?");
+        $stmt->execute([$nome, $fornecedor, $data_inicio, $data_fim, $categoria, $responsavel, $observacoes, $valor, $tipo_contrato, $qtd_anos, $id]);
         $msg = "Contrato atualizado com sucesso!";
         $contrato_id = (int)$id;
     } else {
-        $stmt = $pdo->prepare("INSERT INTO contratos (nome, fornecedor, data_inicio, data_fim, categoria, responsavel, observacoes, valor) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$nome, $fornecedor, $data_inicio, $data_fim, $categoria, $responsavel, $observacoes, $valor]);
+        $stmt = $pdo->prepare("INSERT INTO contratos (nome, fornecedor, data_inicio, data_fim, categoria, responsavel, observacoes, valor, tipo_contrato, qtd_anos) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$nome, $fornecedor, $data_inicio, $data_fim, $categoria, $responsavel, $observacoes, $valor, $tipo_contrato, $qtd_anos]);
         $contrato_id = (int)$pdo->lastInsertId();
         $msg = "Contrato cadastrado com sucesso!";
     }
@@ -159,6 +167,7 @@ include '../includes/header.php';
                         <th class="ps-3">Nome</th>
                         <th>Fornecedor</th>
                         <th>Valor</th>
+                        <th>Tipo</th>
                         <th>Vencimento</th>
                         <th>Anexos</th>
                         <th>Status</th>
@@ -171,6 +180,7 @@ include '../includes/header.php';
                         <td class="ps-3"><strong><?php echo htmlspecialchars($c['nome']); ?></strong></td>
                         <td><?php echo htmlspecialchars($c['fornecedor']); ?></td>
                         <td><?php echo $c['valor'] ? formatarValor($c['valor']) : '<span class="text-secondary">—</span>'; ?></td>
+                        <td><?php echo !empty($c['tipo_contrato']) ? formatarTipoContrato($c['tipo_contrato'], $c['qtd_anos']) : '<span class="text-secondary">—</span>'; ?></td>
                         <td><?php echo formatarData($c['data_fim']); ?></td>
                         <td>
                             <?php if ($c['total_anexos'] > 0): ?>
@@ -268,6 +278,19 @@ include '../includes/header.php';
                             <input type="text" name="valor" id="edit_valor" class="form-control" placeholder="Ex: 1.500,00" inputmode="decimal">
                         </div>
                         <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-rotate me-2"></i> Tipo de Contrato</label>
+                            <select name="tipo_contrato" id="edit_tipo_contrato" class="form-select" onchange="toggleQtdAnos(this.value)">
+                                <option value="">Não especificado</option>
+                                <option value="Mensal">Mensal</option>
+                                <option value="Anual">Anual</option>
+                                <option value="Personalizado">Personalizado (anos)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 text-start" id="campo_qtd_anos" style="display:none;">
+                            <label class="form-label"><i class="fas fa-hashtag me-2"></i> Quantidade de Anos</label>
+                            <input type="number" name="qtd_anos" id="edit_qtd_anos" class="form-control" min="1" max="99" placeholder="Ex: 3">
+                        </div>
+                        <div class="col-md-6 text-start">
                             <label class="form-label"><i class="fas fa-paperclip me-2"></i> Anexar Arquivos</label>
                             <input type="file" name="anexos[]" id="edit_anexos" class="form-control" multiple
                                 accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
@@ -312,6 +335,11 @@ function editarContrato(c) {
         document.getElementById('edit_valor').value = '';
     }
 
+    // Tipo de contrato
+    document.getElementById('edit_tipo_contrato').value = c.tipo_contrato || '';
+    toggleQtdAnos(c.tipo_contrato || '');
+    document.getElementById('edit_qtd_anos').value = c.qtd_anos || '';
+
     // Anexos existentes
     var container = document.getElementById('lista_anexos_container');
     var lista = document.getElementById('lista_anexos');
@@ -334,6 +362,11 @@ function editarContrato(c) {
 }
 
 var APP_URL = '<?php echo APP_URL; ?>';
+
+function toggleQtdAnos(val) {
+    document.getElementById('campo_qtd_anos').style.display = val === 'Personalizado' ? '' : 'none';
+    if (val !== 'Personalizado') document.getElementById('edit_qtd_anos').value = '';
+}
 
 function iconeAnexo(ext) {
     if (['png','jpg','jpeg'].includes(ext)) return 'fa-file-image text-warning';
@@ -381,6 +414,9 @@ document.querySelector('[data-bs-target="#modalContrato"]').addEventListener('cl
     document.getElementById('edit_responsavel').value = '';
     document.getElementById('edit_observacoes').value = '';
     document.getElementById('edit_valor').value = '';
+    document.getElementById('edit_tipo_contrato').value = '';
+    document.getElementById('edit_qtd_anos').value = '';
+    document.getElementById('campo_qtd_anos').style.display = 'none';
     document.getElementById('edit_anexos').value = '';
     document.getElementById('lista_anexos_container').style.display = 'none';
     document.getElementById('lista_anexos').innerHTML = '';
