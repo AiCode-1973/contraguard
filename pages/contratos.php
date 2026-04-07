@@ -174,9 +174,10 @@ include '../includes/header.php';
                         <td><?php echo formatarData($c['data_fim']); ?></td>
                         <td>
                             <?php if ($c['total_anexos'] > 0): ?>
-                                <span class="badge bg-secondary" title="<?php echo $c['total_anexos']; ?> arquivo(s)">
+                                <button class="btn btn-sm btn-outline-secondary" title="Ver anexos"
+                                    onclick="verAnexos(<?php echo htmlspecialchars(json_encode($c), ENT_QUOTES); ?>)">
                                     <i class="fas fa-paperclip me-1"></i><?php echo $c['total_anexos']; ?>
-                                </span>
+                                </button>
                             <?php else: ?>
                                 <span class="text-secondary">—</span>
                             <?php endif; ?>
@@ -200,6 +201,24 @@ include '../includes/header.php';
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Visualizar Anexos -->
+<div class="modal fade" id="modalVisualizarAnexos" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAnexosTitle"><i class="fas fa-paperclip me-2"></i>Anexos do Contrato</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalAnexosBody">
+                <p class="text-secondary">Nenhum anexo.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary px-4 rounded-3" data-bs-dismiss="modal">Fechar</button>
+            </div>
         </div>
     </div>
 </div>
@@ -312,6 +331,38 @@ function editarContrato(c) {
     }
 
     new bootstrap.Modal(document.getElementById('modalContrato')).show();
+}
+
+var APP_URL = '<?php echo APP_URL; ?>';
+
+function iconeAnexo(ext) {
+    if (['png','jpg','jpeg'].includes(ext)) return 'fa-file-image text-warning';
+    if (ext === 'pdf') return 'fa-file-pdf text-danger';
+    if (['doc','docx'].includes(ext)) return 'fa-file-word text-primary';
+    return 'fa-file text-info';
+}
+
+function verAnexos(c) {
+    document.getElementById('modalAnexosTitle').innerHTML = '<i class="fas fa-paperclip me-2"></i>Anexos — ' + escHtml(c.nome);
+    var body = document.getElementById('modalAnexosBody');
+    if (!c._anexos || c._anexos.length === 0) {
+        body.innerHTML = '<p class="text-secondary">Nenhum anexo cadastrado.</p>';
+    } else {
+        var html = '<ul class="list-group list-group-flush">';
+        c._anexos.forEach(function(a) {
+            var ext = a.nome_arquivo.split('.').pop().toLowerCase();
+            html += '<li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center py-2">'
+                + '<span><i class="fas ' + iconeAnexo(ext) + ' me-2"></i>' + escHtml(a.nome_original) + '</span>'
+                + '<div class="d-flex gap-2">'
+                + '<a href="' + APP_URL + '/pages/download_anexo.php?id=' + a.id + '" target="_blank" class="btn btn-sm btn-outline-info"><i class="fas fa-eye me-1"></i>Visualizar</a>'
+                + '<a href="' + APP_URL + '/pages/download_anexo.php?id=' + a.id + '&download=1" class="btn btn-sm btn-outline-success"><i class="fas fa-download me-1"></i>Baixar</a>'
+                + '</div>'
+                + '</li>';
+        });
+        html += '</ul>';
+        body.innerHTML = html;
+    }
+    new bootstrap.Modal(document.getElementById('modalVisualizarAnexos')).show();
 }
 
 function escHtml(str) {
