@@ -16,6 +16,18 @@ function atualizarAlertas($pdo) {
 
 atualizarAlertas($pdo);
 
+// Migrações automáticas (garante colunas antes de qualquer query)
+$colunas_idx = $pdo->query("SHOW COLUMNS FROM contratos")->fetchAll(PDO::FETCH_COLUMN);
+if (!in_array('tipo_contrato', $colunas_idx)) {
+    $pdo->exec("ALTER TABLE contratos ADD COLUMN tipo_contrato VARCHAR(20) DEFAULT NULL");
+}
+if (!in_array('qtd_anos', $colunas_idx)) {
+    $pdo->exec("ALTER TABLE contratos ADD COLUMN qtd_anos INT DEFAULT NULL");
+}
+if (!in_array('valor', $colunas_idx)) {
+    $pdo->exec("ALTER TABLE contratos ADD COLUMN valor DECIMAL(15,2) DEFAULT NULL");
+}
+
 // Filtros
 $cat_filter = $_GET['categoria'] ?? '';
 $where = " WHERE 1=1";
