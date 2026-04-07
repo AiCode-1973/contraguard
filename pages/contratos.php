@@ -43,7 +43,7 @@ include '../includes/header.php';
 
 <div class="card bg-navy border-0 rounded-4 shadow-sm mt-4">
     <div class="card-header bg-transparent border-bottom border-secondary d-flex justify-content-between align-items-center p-4">
-        <h4 class="m-0 fw-bold">Gestão de Contratos</h4>
+        <h4 class="m-0 fw-bold text-white">Gestão de Contratos</h4>
         <?php if (isAdmin()): ?>
         <button class="btn btn-info fw-bold px-4" data-bs-toggle="modal" data-bs-target="#modalContrato">
             <i class="fas fa-plus me-2"></i> Novo Contrato
