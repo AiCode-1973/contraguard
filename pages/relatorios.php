@@ -72,7 +72,7 @@ include '../includes/header.php';
     </div>
 </div>
 
-<h4 class="fw-bold mb-4">Relatórios de Atividade</h4>
+<!--<h4 class="fw-bold mb-4">Relatórios de Atividade</h4>-->
 <div class="card bg-navy border-0 rounded-4 shadow-sm mb-4">
     <div class="card-body p-4">
         <form method="GET" class="row g-3 align-items-end">
