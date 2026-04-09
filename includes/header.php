@@ -91,14 +91,16 @@ require_once __DIR__ . '/functions.php';
         <main class="main-content <?php echo !isset($_SESSION['usuario_id']) ? 'w-100 p-0 m-0' : ''; ?>">
             <?php if (isset($_SESSION['usuario_id'])): ?>
             <header class="top-header">
-                <div>
-                    <h2 class="mb-0 fw-bold">Olá, <?php echo explode(' ', $_SESSION['usuario_nome'])[0]; ?></h2>
-                    <p class="text-secondary small"><?php echo formatarData(date('Y-m-d')); ?> | Status do Sistema: Online</p>
-                </div>
                 <div class="d-flex align-items-center gap-3">
                     <button class="sidebar-toggle-btn" id="sidebarToggle" title="Recolher/expandir menu">
                         <i class="fas fa-bars"></i>
                     </button>
+                    <div>
+                        <h2 class="mb-0 fw-bold">Olá, <?php echo explode(' ', $_SESSION['usuario_nome'])[0]; ?></h2>
+                        <p class="text-secondary small mb-0"><?php echo formatarData(date('Y-m-d')); ?> | Status do Sistema: Online</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
                     <div class="search-wrapper">
                         <i class="fas fa-search"></i>
                         <input type="text" placeholder="Pesquisar em tudo...">
