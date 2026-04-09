@@ -3,40 +3,136 @@ require_once '../includes/db.php';
 require_once '../includes/functions.php';
 verificarLogin();
 
-$acao = $_GET['acao'] ?? 'listar';
-$msg = '';
+// ── Migrações automáticas ──────────────────────────────────────────────────
+$colunas_g = $pdo->query("SHOW COLUMNS FROM garantias")->fetchAll(PDO::FETCH_COLUMN);
+if (!in_array('tipo_garantia', $colunas_g)) {
+    $pdo->exec("ALTER TABLE garantias ADD COLUMN tipo_garantia VARCHAR(20) DEFAULT NULL");
+}
+if (!in_array('qtd_anos', $colunas_g)) {
+    $pdo->exec("ALTER TABLE garantias ADD COLUMN qtd_anos INT DEFAULT NULL");
+}
 
-// Processar exclusão
+$pdo->exec("CREATE TABLE IF NOT EXISTS garantia_anexos (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    garantia_id  INT NOT NULL,
+    nome_original VARCHAR(255) NOT NULL,
+    nome_arquivo  VARCHAR(255) NOT NULL,
+    criado_em    DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (garantia_id) REFERENCES garantias(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$upload_dir = __DIR__ . '/../uploads/garantias/';
+if (!is_dir($upload_dir)) {
+    mkdir($upload_dir, 0755, true);
+}
+
+$extensoes_permitidas = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'];
+$tamanho_maximo = 10 * 1024 * 1024; // 10 MB
+
+$acao = $_GET['acao'] ?? 'listar';
+$msg  = '';
+
+// ── Excluir garantia ──────────────────────────────────────────────────────
 if ($acao === 'excluir' && isset($_GET['id']) && isAdmin()) {
-    $stmt = $pdo->prepare("DELETE FROM garantias WHERE id = ?");
-    $stmt->execute([$_GET['id']]);
+    $id_del = (int)$_GET['id'];
+    $anexos_del = $pdo->prepare("SELECT nome_arquivo FROM garantia_anexos WHERE garantia_id = ?");
+    $anexos_del->execute([$id_del]);
+    foreach ($anexos_del->fetchAll() as $a) {
+        $caminho = $upload_dir . $a['nome_arquivo'];
+        if (file_exists($caminho)) unlink($caminho);
+    }
+    $pdo->prepare("DELETE FROM garantias WHERE id = ?")->execute([$id_del]);
     header('Location: garantias.php?msg=Garantia excluída com sucesso');
     exit;
 }
 
-// Processar formulário (Adicionar/Editar)
+// ── Excluir anexo individual ──────────────────────────────────────────────
+if ($acao === 'excluir_anexo' && isset($_GET['id']) && isAdmin()) {
+    $id_anexo = (int)$_GET['id'];
+    $row = $pdo->prepare("SELECT nome_arquivo FROM garantia_anexos WHERE id = ?");
+    $row->execute([$id_anexo]);
+    $anexo = $row->fetch();
+    if ($anexo) {
+        $caminho = $upload_dir . $anexo['nome_arquivo'];
+        if (file_exists($caminho)) unlink($caminho);
+        $pdo->prepare("DELETE FROM garantia_anexos WHERE id = ?")->execute([$id_anexo]);
+        header('Location: garantias.php?msg=Anexo removido com sucesso');
+    }
+    exit;
+}
+
+// ── Processar formulário (Adicionar/Editar) ───────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = $_POST['id'] ?? null;
+    $id               = $_POST['id'] ?? null;
     $nome_equipamento = $_POST['nome_equipamento'];
-    $numero_serie = $_POST['numero_serie'];
-    $data_compra = $_POST['data_compra'];
-    $expira_garantia = $_POST['expira_garantia'];
-    $fornecedor = $_POST['fornecedor'];
-    $responsavel = $_POST['responsavel'];
-    $observacoes = $_POST['observacoes'];
+    $numero_serie     = $_POST['numero_serie'];
+    $data_compra      = $_POST['data_compra'];
+    $expira_garantia  = $_POST['expira_garantia'];
+    $fornecedor       = $_POST['fornecedor'];
+    $responsavel      = $_POST['responsavel'];
+    $observacoes      = $_POST['observacoes'];
+    $tipo_garantia    = !empty($_POST['tipo_garantia']) ? $_POST['tipo_garantia'] : null;
+    $qtd_anos         = ($tipo_garantia === 'Personalizado' && !empty($_POST['qtd_anos'])) ? (int)$_POST['qtd_anos'] : null;
 
     if ($id) {
-        $stmt = $pdo->prepare("UPDATE garantias SET nome_equipamento=?, numero_serie=?, data_compra=?, expira_garantia=?, fornecedor=?, responsavel=?, observacoes=? WHERE id=?");
-        $stmt->execute([$nome_equipamento, $numero_serie, $data_compra, $expira_garantia, $fornecedor, $responsavel, $observacoes, $id]);
+        $stmt = $pdo->prepare("UPDATE garantias SET nome_equipamento=?, numero_serie=?, data_compra=?, expira_garantia=?, fornecedor=?, responsavel=?, observacoes=?, tipo_garantia=?, qtd_anos=? WHERE id=?");
+        $stmt->execute([$nome_equipamento, $numero_serie, $data_compra, $expira_garantia, $fornecedor, $responsavel, $observacoes, $tipo_garantia, $qtd_anos, $id]);
         $msg = "Garantia atualizada com sucesso!";
+        $garantia_id = (int)$id;
     } else {
-        $stmt = $pdo->prepare("INSERT INTO garantias (nome_equipamento, numero_serie, data_compra, expira_garantia, fornecedor, responsavel, observacoes) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$nome_equipamento, $numero_serie, $data_compra, $expira_garantia, $fornecedor, $responsavel, $observacoes]);
+        $stmt = $pdo->prepare("INSERT INTO garantias (nome_equipamento, numero_serie, data_compra, expira_garantia, fornecedor, responsavel, observacoes, tipo_garantia, qtd_anos) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$nome_equipamento, $numero_serie, $data_compra, $expira_garantia, $fornecedor, $responsavel, $observacoes, $tipo_garantia, $qtd_anos]);
+        $garantia_id = (int)$pdo->lastInsertId();
         $msg = "Garantia cadastrada com sucesso!";
+    }
+
+    // Upload de anexos
+    if (!empty($_FILES['anexos']['name'][0])) {
+        $erros_upload = [];
+        foreach ($_FILES['anexos']['tmp_name'] as $i => $tmp) {
+            if ($_FILES['anexos']['error'][$i] !== UPLOAD_ERR_OK) continue;
+            $nome_original = $_FILES['anexos']['name'][$i];
+            $ext = strtolower(pathinfo($nome_original, PATHINFO_EXTENSION));
+            if (!in_array($ext, $extensoes_permitidas)) {
+                $erros_upload[] = "\"$nome_original\" não permitido (use PDF, DOC, DOCX, PNG, JPG).";
+                continue;
+            }
+            if ($_FILES['anexos']['size'][$i] > $tamanho_maximo) {
+                $erros_upload[] = "\"$nome_original\" excede o limite de 10 MB.";
+                continue;
+            }
+            $nome_arquivo = uniqid('garantia_' . $garantia_id . '_') . '.' . $ext;
+            move_uploaded_file($tmp, $upload_dir . $nome_arquivo);
+            $pdo->prepare("INSERT INTO garantia_anexos (garantia_id, nome_original, nome_arquivo) VALUES (?, ?, ?)")
+                ->execute([$garantia_id, $nome_original, $nome_arquivo]);
+        }
+        if ($erros_upload) {
+            $msg .= ' Atenção: ' . implode(' ', $erros_upload);
+        }
     }
 }
 
-$garantias = $pdo->query("SELECT * FROM garantias ORDER BY expira_garantia ASC")->fetchAll();
+// Mensagens via GET
+if (isset($_GET['msg'])) {
+    $msg = htmlspecialchars($_GET['msg']);
+}
+
+// ── Buscar garantias com contagem de anexos ───────────────────────────────
+$garantias_raw = $pdo->query(
+    "SELECT g.*, COUNT(a.id) as total_anexos
+     FROM garantias g
+     LEFT JOIN garantia_anexos a ON a.garantia_id = g.id
+     GROUP BY g.id
+     ORDER BY g.expira_garantia ASC"
+)->fetchAll();
+
+$garantias = [];
+foreach ($garantias_raw as $g) {
+    $stmt_a = $pdo->prepare("SELECT * FROM garantia_anexos WHERE garantia_id = ?");
+    $stmt_a->execute([$g['id']]);
+    $g['_anexos'] = $stmt_a->fetchAll();
+    $garantias[] = $g;
+}
 
 include '../includes/header.php';
 ?>
@@ -60,6 +156,8 @@ include '../includes/header.php';
                     <tr>
                         <th class="ps-3">Equipamento</th>
                         <th>Nº de Série</th>
+                        <th>Tipo</th>
+                        <th>Anexos</th>
                         <th>Expiração</th>
                         <th>Status</th>
                         <th class="pe-3">Ações</th>
@@ -68,8 +166,19 @@ include '../includes/header.php';
                 <tbody>
                     <?php foreach($garantias as $g): ?>
                     <tr>
-                        <td class="ps-3"><strong><?php echo $g['nome_equipamento']; ?></strong></td>
-                        <td><?php echo $g['numero_serie']; ?></td>
+                        <td class="ps-3"><strong><?php echo htmlspecialchars($g['nome_equipamento']); ?></strong></td>
+                        <td><?php echo htmlspecialchars($g['numero_serie']); ?></td>
+                        <td><?php echo !empty($g['tipo_garantia']) ? formatarTipoContrato($g['tipo_garantia'], $g['qtd_anos']) : '<span class="text-secondary">—</span>'; ?></td>
+                        <td>
+                            <?php if ($g['total_anexos'] > 0): ?>
+                                <button class="btn btn-sm btn-outline-secondary" title="Ver anexos"
+                                    onclick="verAnexos(<?php echo htmlspecialchars(json_encode($g), ENT_QUOTES); ?>)">
+                                    <i class="fas fa-paperclip me-1"></i><?php echo $g['total_anexos']; ?>
+                                </button>
+                            <?php else: ?>
+                                <span class="text-secondary">—</span>
+                            <?php endif; ?>
+                        </td>
                         <td><?php echo formatarData($g['expira_garantia']); ?></td>
                         <td>
                             <span class="badge badge-<?php echo $g['status']; ?>">
@@ -78,14 +187,13 @@ include '../includes/header.php';
                         </td>
                         <td class="pe-3">
                             <?php if (isAdmin()): ?>
-                            <button class="btn btn-sm btn-outline-info" onclick="editarGarantia(<?php echo htmlspecialchars(json_encode($g)); ?>)">
+                            <button class="btn btn-sm btn-outline-info" onclick="editarGarantia(<?php echo htmlspecialchars(json_encode($g), ENT_QUOTES); ?>)">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <a href="?acao=excluir&id=<?php echo $g['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Tem certeza?')">
+                            <a href="?acao=excluir&id=<?php echo $g['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir esta garantia e todos os seus anexos?')">
                                 <i class="fas fa-trash"></i>
                             </a>
                             <?php endif; ?>
-                            <button class="btn btn-sm btn-outline-light"><i class="fas fa-eye"></i></button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -95,10 +203,27 @@ include '../includes/header.php';
     </div>
 </div>
 
+<div class="modal fade" id="modalVisualizarAnexos" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAnexosTitle"><i class="fas fa-paperclip me-2"></i>Anexos da Garantia</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalAnexosBody">
+                <p class="text-secondary">Nenhum anexo.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary px-4 rounded-3" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="modalGarantia" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">Cadastrar Nova Garantia</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -130,6 +255,29 @@ include '../includes/header.php';
                             <label class="form-label"><i class="fas fa-user-circle me-2"></i> Responsável</label>
                             <input type="text" name="responsavel" id="edit_responsavel" class="form-control" placeholder="Ex: Alice">
                         </div>
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-rotate me-2"></i> Tipo de Garantia</label>
+                            <select name="tipo_garantia" id="edit_tipo_garantia" class="form-select" onchange="toggleQtdAnos(this.value)">
+                                <option value="">Não especificado</option>
+                                <option value="Mensal">Mensal</option>
+                                <option value="Anual">Anual</option>
+                                <option value="Personalizado">Personalizado (anos)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 text-start" id="campo_qtd_anos" style="display:none;">
+                            <label class="form-label"><i class="fas fa-hashtag me-2"></i> Quantidade de Anos</label>
+                            <input type="number" name="qtd_anos" id="edit_qtd_anos" class="form-control" min="1" max="99" placeholder="Ex: 3">
+                        </div>
+                        <div class="col-md-6 text-start">
+                            <label class="form-label"><i class="fas fa-paperclip me-2"></i> Anexar Arquivos</label>
+                            <input type="file" name="anexos[]" id="edit_anexos" class="form-control" multiple
+                                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+                            <div class="form-text text-secondary">PDF, DOC, DOCX, PNG, JPG — máx. 10 MB cada</div>
+                        </div>
+                        <div class="col-12 text-start" id="lista_anexos_container" style="display:none;">
+                            <label class="form-label"><i class="fas fa-folder-open me-2"></i> Anexos Existentes</label>
+                            <ul class="list-group list-group-flush" id="lista_anexos"></ul>
+                        </div>
                         <div class="col-12 text-start">
                             <label class="form-label"><i class="fas fa-clipboard-list me-2"></i> Observações</label>
                             <textarea name="observacoes" id="edit_observacoes" class="form-control" rows="3" placeholder="Status do item, histórico..."></textarea>
@@ -146,6 +294,47 @@ include '../includes/header.php';
 </div>
 
 <script>
+var APP_URL = '<?php echo APP_URL; ?>';
+
+function toggleQtdAnos(val) {
+    document.getElementById('campo_qtd_anos').style.display = val === 'Personalizado' ? '' : 'none';
+    if (val !== 'Personalizado') document.getElementById('edit_qtd_anos').value = '';
+}
+
+function iconeAnexo(ext) {
+    if (['png','jpg','jpeg'].includes(ext)) return 'fa-file-image text-warning';
+    if (ext === 'pdf') return 'fa-file-pdf text-danger';
+    if (['doc','docx'].includes(ext)) return 'fa-file-word text-primary';
+    return 'fa-file text-info';
+}
+
+function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function verAnexos(g) {
+    document.getElementById('modalAnexosTitle').innerHTML = '<i class="fas fa-paperclip me-2"></i>Anexos — ' + escHtml(g.nome_equipamento);
+    var body = document.getElementById('modalAnexosBody');
+    if (!g._anexos || g._anexos.length === 0) {
+        body.innerHTML = '<p class="text-secondary">Nenhum anexo cadastrado.</p>';
+    } else {
+        var html = '<ul class="list-group list-group-flush">';
+        g._anexos.forEach(function(a) {
+            var ext = a.nome_arquivo.split('.').pop().toLowerCase();
+            html += '<li class="list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center py-2">'
+                + '<span><i class="fas ' + iconeAnexo(ext) + ' me-2"></i>' + escHtml(a.nome_original) + '</span>'
+                + '<div class="d-flex gap-2">'
+                + '<a href="' + APP_URL + '/pages/download_garantia_anexo.php?id=' + a.id + '" target="_blank" class="btn btn-sm btn-outline-info"><i class="fas fa-eye me-1"></i>Visualizar</a>'
+                + '<a href="' + APP_URL + '/pages/download_garantia_anexo.php?id=' + a.id + '&download=1" class="btn btn-sm btn-outline-success"><i class="fas fa-download me-1"></i>Baixar</a>'
+                + '</div>'
+                + '</li>';
+        });
+        html += '</ul>';
+        body.innerHTML = html;
+    }
+    new bootstrap.Modal(document.getElementById('modalVisualizarAnexos')).show();
+}
+
 function editarGarantia(g) {
     document.getElementById('modalTitle').innerText = 'Editar Garantia';
     document.getElementById('edit_id').value = g.id;
@@ -156,9 +345,53 @@ function editarGarantia(g) {
     document.getElementById('edit_fornecedor').value = g.fornecedor;
     document.getElementById('edit_responsavel').value = g.responsavel;
     document.getElementById('edit_observacoes').value = g.observacoes;
-    
+    document.getElementById('edit_tipo_garantia').value = g.tipo_garantia || '';
+    toggleQtdAnos(g.tipo_garantia || '');
+    document.getElementById('edit_qtd_anos').value = g.qtd_anos || '';
+
+    // Anexos existentes
+    var container = document.getElementById('lista_anexos_container');
+    var lista = document.getElementById('lista_anexos');
+    lista.innerHTML = '';
+    if (g._anexos && g._anexos.length > 0) {
+        g._anexos.forEach(function(a) {
+            var li = document.createElement('li');
+            li.className = 'list-group-item bg-transparent text-white border-secondary d-flex justify-content-between align-items-center py-1';
+            li.innerHTML = '<span><i class="fas fa-file me-2 text-info"></i>' + escHtml(a.nome_original) + '</span>'
+                + '<div class="d-flex gap-1">'
+                + '<a href="' + APP_URL + '/pages/download_garantia_anexo.php?id=' + a.id + '" target="_blank" class="btn btn-sm btn-outline-info py-0 px-2" title="Visualizar"><i class="fas fa-eye"></i></a>'
+                + '<a href="' + APP_URL + '/pages/download_garantia_anexo.php?id=' + a.id + '&download=1" class="btn btn-sm btn-outline-success py-0 px-2" title="Baixar"><i class="fas fa-download"></i></a>'
+                + '<a href="?acao=excluir_anexo&id=' + a.id + '" class="btn btn-sm btn-outline-danger py-0 px-2" title="Remover"'
+                + ' onclick="return confirm(\'Remover este anexo?\')"><i class="fas fa-times"></i></a>'
+                + '</div>';
+            lista.appendChild(li);
+        });
+        container.style.display = '';
+    } else {
+        container.style.display = 'none';
+    }
+
     new bootstrap.Modal(document.getElementById('modalGarantia')).show();
 }
+
+// Resetar modal ao abrir via botão "Nova Garantia"
+document.querySelector('[data-bs-target="#modalGarantia"]').addEventListener('click', function() {
+    document.getElementById('modalTitle').innerText = 'Cadastrar Nova Garantia';
+    document.getElementById('edit_id').value = '';
+    document.getElementById('edit_nome_equipamento').value = '';
+    document.getElementById('edit_numero_serie').value = '';
+    document.getElementById('edit_data_compra').value = '';
+    document.getElementById('edit_expira_garantia').value = '';
+    document.getElementById('edit_fornecedor').value = '';
+    document.getElementById('edit_responsavel').value = '';
+    document.getElementById('edit_observacoes').value = '';
+    document.getElementById('edit_tipo_garantia').value = '';
+    document.getElementById('edit_qtd_anos').value = '';
+    document.getElementById('campo_qtd_anos').style.display = 'none';
+    document.getElementById('edit_anexos').value = '';
+    document.getElementById('lista_anexos_container').style.display = 'none';
+    document.getElementById('lista_anexos').innerHTML = '';
+});
 </script>
 
 <?php include '../includes/footer.php'; ?>
