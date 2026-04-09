@@ -42,6 +42,36 @@ function verificarLogin() {
 }
 
 function isAdmin() {
-    return isset($_SESSION['usuario_nivel']) && $_SESSION['usuario_nivel'] === 'admin';
+    return isset($_SESSION['usuario_perfil']) && $_SESSION['usuario_perfil'] === 'admin';
+}
+
+function isGestor() {
+    return isset($_SESSION['usuario_perfil']) && $_SESSION['usuario_perfil'] === 'gestor';
+}
+
+function isVisualizador() {
+    return isset($_SESSION['usuario_perfil']) && $_SESSION['usuario_perfil'] === 'visualizador';
+}
+
+function canEdit() {
+    return isAdmin() || isGestor();
+}
+
+function getPerfilLabel($perfil) {
+    $labels = [
+        'admin'        => 'Administrador',
+        'gestor'       => 'Gestor',
+        'visualizador' => 'Visualizador',
+    ];
+    return $labels[$perfil] ?? ucfirst($perfil);
+}
+
+function getPerfilBadgeClass($perfil) {
+    $classes = [
+        'admin'        => 'bg-info text-dark',
+        'gestor'       => 'bg-primary',
+        'visualizador' => 'bg-secondary',
+    ];
+    return $classes[$perfil] ?? 'bg-secondary';
 }
 ?>

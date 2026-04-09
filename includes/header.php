@@ -66,6 +66,9 @@ require_once __DIR__ . '/functions.php';
                 <a href="<?php echo APP_URL; ?>/pages/usuarios.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'usuarios.php' ? 'active' : ''; ?>">
                     <i class="fas fa-users-gear"></i> <span class="nav-text">Usuários</span>
                 </a>
+                <a href="<?php echo APP_URL; ?>/pages/setores.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'setores.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-building"></i> <span class="nav-text">Setores</span>
+                </a>
                 <a href="<?php echo APP_URL; ?>/pages/categorias.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'categorias.php' ? 'active' : ''; ?>">
                     <i class="fas fa-tags"></i> <span class="nav-text">Categorias</span>
                 </a>

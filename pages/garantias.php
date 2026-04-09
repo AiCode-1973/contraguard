@@ -11,6 +11,9 @@ if (!in_array('tipo_garantia', $colunas_g)) {
 if (!in_array('qtd_anos', $colunas_g)) {
     $pdo->exec("ALTER TABLE garantias ADD COLUMN qtd_anos INT DEFAULT NULL");
 }
+if (!in_array('usuario_id', $colunas_g)) {
+    $pdo->exec("ALTER TABLE garantias ADD COLUMN usuario_id INT DEFAULT NULL");
+}
 
 $pdo->exec("CREATE TABLE IF NOT EXISTS garantia_anexos (
     id           INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,8 +36,13 @@ $acao = $_GET['acao'] ?? 'listar';
 $msg  = '';
 
 // ── Excluir garantia ──────────────────────────────────────────────────────
-if ($acao === 'excluir' && isset($_GET['id']) && isAdmin()) {
+if ($acao === 'excluir' && isset($_GET['id']) && canEdit()) {
     $id_del = (int)$_GET['id'];
+    if (isGestor()) {
+        $chk = $pdo->prepare("SELECT id FROM garantias WHERE id = ? AND usuario_id = ?");
+        $chk->execute([$id_del, $_SESSION['usuario_id']]);
+        if (!$chk->fetch()) { header('Location: garantias.php'); exit; }
+    }
     $anexos_del = $pdo->prepare("SELECT nome_arquivo FROM garantia_anexos WHERE garantia_id = ?");
     $anexos_del->execute([$id_del]);
     foreach ($anexos_del->fetchAll() as $a) {
@@ -47,7 +55,7 @@ if ($acao === 'excluir' && isset($_GET['id']) && isAdmin()) {
 }
 
 // ── Excluir anexo individual ──────────────────────────────────────────────
-if ($acao === 'excluir_anexo' && isset($_GET['id']) && isAdmin()) {
+if ($acao === 'excluir_anexo' && isset($_GET['id']) && canEdit()) {
     $id_anexo = (int)$_GET['id'];
     $row = $pdo->prepare("SELECT nome_arquivo FROM garantia_anexos WHERE id = ?");
     $row->execute([$id_anexo]);
@@ -62,7 +70,7 @@ if ($acao === 'excluir_anexo' && isset($_GET['id']) && isAdmin()) {
 }
 
 // ── Processar formulário (Adicionar/Editar) ───────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && canEdit()) {
     $id               = $_POST['id'] ?? null;
     $nome_equipamento = $_POST['nome_equipamento'];
     $numero_serie     = $_POST['numero_serie'];
@@ -80,8 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msg = "Garantia atualizada com sucesso!";
         $garantia_id = (int)$id;
     } else {
-        $stmt = $pdo->prepare("INSERT INTO garantias (nome_equipamento, numero_serie, data_compra, expira_garantia, fornecedor, responsavel, observacoes, tipo_garantia, qtd_anos) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$nome_equipamento, $numero_serie, $data_compra, $expira_garantia, $fornecedor, $responsavel, $observacoes, $tipo_garantia, $qtd_anos]);
+        $stmt = $pdo->prepare("INSERT INTO garantias (nome_equipamento, numero_serie, data_compra, expira_garantia, fornecedor, responsavel, observacoes, tipo_garantia, qtd_anos, usuario_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$nome_equipamento, $numero_serie, $data_compra, $expira_garantia, $fornecedor, $responsavel, $observacoes, $tipo_garantia, $qtd_anos, $_SESSION['usuario_id']]);
         $garantia_id = (int)$pdo->lastInsertId();
         $msg = "Garantia cadastrada com sucesso!";
     }
@@ -118,13 +126,22 @@ if (isset($_GET['msg'])) {
 }
 
 // ── Buscar garantias com contagem de anexos ───────────────────────────────
-$garantias_raw = $pdo->query(
+$where_g = '';
+$params_g = [];
+if (isGestor() || isVisualizador()) {
+    $where_g = 'WHERE g.usuario_id = ?';
+    $params_g = [(int)$_SESSION['usuario_id']];
+}
+$stmt_g = $pdo->prepare(
     "SELECT g.*, COUNT(a.id) as total_anexos
      FROM garantias g
      LEFT JOIN garantia_anexos a ON a.garantia_id = g.id
+     $where_g
      GROUP BY g.id
      ORDER BY g.expira_garantia ASC"
-)->fetchAll();
+);
+$stmt_g->execute($params_g);
+$garantias_raw = $stmt_g->fetchAll();
 
 $garantias = [];
 foreach ($garantias_raw as $g) {
@@ -140,7 +157,7 @@ include '../includes/header.php';
 <div class="card bg-navy border-0 rounded-4 shadow-sm mt-4">
     <div class="card-header bg-transparent border-bottom border-secondary d-flex justify-content-between align-items-center p-4">
         <h4 class="m-0 fw-bold text-white">Gestão de Garantias</h4>
-        <?php if (isAdmin()): ?>
+        <?php if (canEdit()): ?>
         <button class="btn btn-info fw-bold px-4" data-bs-toggle="modal" data-bs-target="#modalGarantia">
             <i class="fas fa-plus me-2"></i> Nova Garantia
         </button>
@@ -186,13 +203,20 @@ include '../includes/header.php';
                             </span>
                         </td>
                         <td class="pe-3">
-                            <?php if (isAdmin()): ?>
+                            <?php
+                            $pode_editar_g = isAdmin() || (isGestor() && (int)($g['usuario_id'] ?? 0) === (int)$_SESSION['usuario_id']);
+                            ?>
+                            <?php if ($pode_editar_g): ?>
                             <button class="btn btn-sm btn-outline-info" onclick="editarGarantia(<?php echo htmlspecialchars(json_encode($g), ENT_QUOTES); ?>)">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <a href="?acao=excluir&id=<?php echo $g['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir esta garantia e todos os seus anexos?')">
                                 <i class="fas fa-trash"></i>
                             </a>
+                            <?php else: ?>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="editarGarantia(<?php echo htmlspecialchars(json_encode($g), ENT_QUOTES); ?>)" title="Visualizar">
+                                <i class="fas fa-eye"></i>
+                            </button>
                             <?php endif; ?>
                         </td>
                     </tr>

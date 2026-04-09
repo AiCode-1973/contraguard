@@ -18,9 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($senha, $user['senha'])) {
-            $_SESSION['usuario_id'] = $user['id'];
-            $_SESSION['usuario_nome'] = !empty($user['nome']) ? $user['nome'] : $user['usuario'];
-            $_SESSION['usuario_nivel'] = $user['nivel'];
+            $_SESSION['usuario_id']     = $user['id'];
+            $_SESSION['usuario_nome']   = !empty($user['nome']) ? $user['nome'] : $user['usuario'];
+            $_SESSION['usuario_nivel']  = $user['nivel']; // legado
+            $_SESSION['usuario_perfil'] = $user['nivel']; // admin | gestor | visualizador
+            $_SESSION['usuario_setor_id'] = $user['setor_id'] ?? null;
             header('Location: index.php');
             exit;
         } else {

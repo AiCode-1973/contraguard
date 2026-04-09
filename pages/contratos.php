@@ -14,6 +14,9 @@ if (!in_array('tipo_contrato', $colunas_c)) {
 if (!in_array('qtd_anos', $colunas_c)) {
     $pdo->exec("ALTER TABLE contratos ADD COLUMN qtd_anos INT DEFAULT NULL");
 }
+if (!in_array('usuario_id', $colunas_c)) {
+    $pdo->exec("ALTER TABLE contratos ADD COLUMN usuario_id INT DEFAULT NULL");
+}
 
 $pdo->exec("CREATE TABLE IF NOT EXISTS contrato_anexos (
     id          INT AUTO_INCREMENT PRIMARY KEY,
@@ -41,8 +44,14 @@ $acao = $_GET['acao'] ?? 'listar';
 $msg  = '';
 
 // ── Excluir contrato ──────────────────────────────────────────────────────
-if ($acao === 'excluir' && isset($_GET['id']) && isAdmin()) {
+if ($acao === 'excluir' && isset($_GET['id']) && canEdit()) {
     $id_del = (int)$_GET['id'];
+    // Gestor só pode excluir seus próprios contratos
+    if (isGestor()) {
+        $check_del = $pdo->prepare("SELECT id FROM contratos WHERE id = ? AND usuario_id = ?");
+        $check_del->execute([$id_del, $_SESSION['usuario_id']]);
+        if (!$check_del->fetch()) { header('Location: contratos.php'); exit; }
+    }
     // Apaga arquivos físicos do contrato
     $anexos_del = $pdo->prepare("SELECT nome_arquivo FROM contrato_anexos WHERE contrato_id = ?");
     $anexos_del->execute([$id_del]);
@@ -57,7 +66,7 @@ if ($acao === 'excluir' && isset($_GET['id']) && isAdmin()) {
 }
 
 // ── Excluir anexo individual ──────────────────────────────────────────────
-if ($acao === 'excluir_anexo' && isset($_GET['id']) && isAdmin()) {
+if ($acao === 'excluir_anexo' && isset($_GET['id']) && canEdit()) {
     $id_anexo = (int)$_GET['id'];
     $row = $pdo->prepare("SELECT nome_arquivo, contrato_id FROM contrato_anexos WHERE id = ?");
     $row->execute([$id_anexo]);
@@ -72,7 +81,7 @@ if ($acao === 'excluir_anexo' && isset($_GET['id']) && isAdmin()) {
 }
 
 // ── Processar formulário (Adicionar/Editar) ───────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && canEdit()) {
     $id          = $_POST['id'] ?? null;
     $nome        = $_POST['nome'];
     $fornecedor  = $_POST['fornecedor'];
@@ -94,8 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msg = "Contrato atualizado com sucesso!";
         $contrato_id = (int)$id;
     } else {
-        $stmt = $pdo->prepare("INSERT INTO contratos (nome, fornecedor, data_inicio, data_fim, categoria, responsavel, observacoes, valor, tipo_contrato, qtd_anos) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$nome, $fornecedor, $data_inicio, $data_fim, $categoria, $responsavel, $observacoes, $valor, $tipo_contrato, $qtd_anos]);
+        $stmt = $pdo->prepare("INSERT INTO contratos (nome, fornecedor, data_inicio, data_fim, categoria, responsavel, observacoes, valor, tipo_contrato, qtd_anos, usuario_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$nome, $fornecedor, $data_inicio, $data_fim, $categoria, $responsavel, $observacoes, $valor, $tipo_contrato, $qtd_anos, $_SESSION['usuario_id']]);
         $contrato_id = (int)$pdo->lastInsertId();
         $msg = "Contrato cadastrado com sucesso!";
     }
@@ -136,13 +145,22 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
 $categorias_list = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
 
 // ── Buscar contratos com contagem de anexos ───────────────────────────────
-$contratos_raw = $pdo->query(
+$where_usuario = '';
+$params_usuario = [];
+if (isGestor() || isVisualizador()) {
+    $where_usuario = 'WHERE c.usuario_id = ?';
+    $params_usuario = [(int)$_SESSION['usuario_id']];
+}
+$stmt_contratos = $pdo->prepare(
     "SELECT c.*, COUNT(a.id) as total_anexos
      FROM contratos c
      LEFT JOIN contrato_anexos a ON a.contrato_id = c.id
+     $where_usuario
      GROUP BY c.id
      ORDER BY c.data_fim ASC"
-)->fetchAll();
+);
+$stmt_contratos->execute($params_usuario);
+$contratos_raw = $stmt_contratos->fetchAll();
 
 // Annexar lista de arquivos para o modal de edição
 $contratos = [];
@@ -159,7 +177,7 @@ include '../includes/header.php';
 <div class="card bg-navy border-0 rounded-4 shadow-sm mt-4">
     <div class="card-header bg-transparent border-bottom border-secondary d-flex justify-content-between align-items-center p-4">
         <h4 class="m-0 fw-bold text-white">Gestão de Contratos</h4>
-        <?php if (isAdmin()): ?>
+        <?php if (canEdit()): ?>
         <button class="btn btn-info fw-bold px-4" data-bs-toggle="modal" data-bs-target="#modalContrato">
             <i class="fas fa-plus me-2"></i> Novo Contrato
         </button>
@@ -207,13 +225,20 @@ include '../includes/header.php';
                             </span>
                         </td>
                         <td class="pe-3">
-                            <?php if (isAdmin()): ?>
+                            <?php
+                            $pode_editar = isAdmin() || (isGestor() && (int)($c['usuario_id'] ?? 0) === (int)$_SESSION['usuario_id']);
+                            ?>
+                            <?php if ($pode_editar): ?>
                             <button class="btn btn-sm btn-outline-info" onclick="editarContrato(<?php echo htmlspecialchars(json_encode($c), ENT_QUOTES); ?>)">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <a href="?acao=excluir&id=<?php echo $c['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir este contrato e todos os seus anexos?')">
                                 <i class="fas fa-trash"></i>
                             </a>
+                            <?php else: ?>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="editarContrato(<?php echo htmlspecialchars(json_encode($c), ENT_QUOTES); ?>)" title="Visualizar">
+                                <i class="fas fa-eye"></i>
+                            </button>
                             <?php endif; ?>
                         </td>
                     </tr>
