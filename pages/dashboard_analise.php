@@ -116,9 +116,9 @@ include '../includes/header.php';
     <div class="col-md-4">
         <div class="card bg-navy border-0 rounded-4 shadow-sm h-100">
             <div class="card-header bg-transparent border-bottom border-secondary p-4 pb-3">
-                <h6 class="m-0 fw-bold"><i class="fas fa-file-invoice-dollar me-2 text-info"></i>Status dos Contratos</h6>
+                <h6 class="m-0 fw-bold text-white"><i class="fas fa-file-invoice-dollar me-2 text-info"></i>Status dos Contratos</h6>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-4 text-white">
                 <?php
                 $total_c = $total_contratos ?: 1;
                 $bars = [
@@ -147,9 +147,9 @@ include '../includes/header.php';
     <div class="col-md-4">
         <div class="card bg-navy border-0 rounded-4 shadow-sm h-100">
             <div class="card-header bg-transparent border-bottom border-secondary p-4 pb-3">
-                <h6 class="m-0 fw-bold"><i class="fas fa-box-open me-2 text-info"></i>Status das Garantias</h6>
+                <h6 class="m-0 fw-bold text-white"><i class="fas fa-box-open me-2 text-info"></i>Status das Garantias</h6>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-4 text-white">
                 <?php
                 $total_g = $total_garantias ?: 1;
                 $bars_g = [
@@ -178,9 +178,9 @@ include '../includes/header.php';
     <div class="col-md-4">
         <div class="card bg-navy border-0 rounded-4 shadow-sm h-100">
             <div class="card-header bg-transparent border-bottom border-secondary p-4 pb-3">
-                <h6 class="m-0 fw-bold"><i class="fas fa-rotate me-2 text-info"></i>Contratos por Tipo</h6>
+                <h6 class="m-0 fw-bold text-white"><i class="fas fa-rotate me-2 text-info"></i>Contratos por Tipo</h6>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-4 text-white">
                 <?php if (empty($por_tipo)): ?>
                     <p class="text-secondary small">Nenhum tipo cadastrado.</p>
                 <?php else: ?>
@@ -208,9 +208,9 @@ include '../includes/header.php';
     <div class="col-md-6">
         <div class="card bg-navy border-0 rounded-4 shadow-sm h-100">
             <div class="card-header bg-transparent border-bottom border-secondary p-4 pb-3">
-                <h6 class="m-0 fw-bold"><i class="fas fa-tags me-2 text-info"></i>Valor por Categoria</h6>
+                <h6 class="m-0 fw-bold text-white"><i class="fas fa-tags me-2 text-info"></i>Valor por Categoria</h6>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body p-0 text-white">
                 <table class="table table-dark-custom align-middle mb-0">
                     <thead>
                         <tr>
@@ -241,9 +241,9 @@ include '../includes/header.php';
     <div class="col-md-6">
         <div class="card bg-navy border-0 rounded-4 shadow-sm h-100">
             <div class="card-header bg-transparent border-bottom border-secondary p-4 pb-3">
-                <h6 class="m-0 fw-bold"><i class="fas fa-trophy me-2 text-warning"></i>Top 5 Contratos por Valor</h6>
+                <h6 class="m-0 fw-bold text-white"><i class="fas fa-trophy me-2 text-warning"></i>Top 5 Contratos por Valor</h6>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body p-0 text-white">
                 <table class="table table-dark-custom align-middle mb-0">
                     <thead>
                         <tr>
@@ -279,9 +279,9 @@ include '../includes/header.php';
     <div class="col-md-5">
         <div class="card bg-navy border-0 rounded-4 shadow-sm h-100">
             <div class="card-header bg-transparent border-bottom border-secondary p-4 pb-3">
-                <h6 class="m-0 fw-bold"><i class="fas fa-calendar-days me-2 text-info"></i>Vencimentos — Próximos 90 dias</h6>
+                <h6 class="m-0 fw-bold text-white"><i class="fas fa-calendar-days me-2 text-info"></i>Vencimentos — Próximos 90 dias</h6>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-4 text-white">
                 <?php if (empty($venc_meses)): ?>
                     <p class="text-secondary small">Nenhum vencimento nos próximos 90 dias.</p>
                 <?php else: ?>
@@ -309,9 +309,9 @@ include '../includes/header.php';
     <div class="col-md-7">
         <div class="card bg-navy border-0 rounded-4 shadow-sm h-100">
             <div class="card-header bg-transparent border-bottom border-secondary p-4 pb-3">
-                <h6 class="m-0 fw-bold"><i class="fas fa-clock-rotate-left me-2 text-info"></i>Últimos Cadastros</h6>
+                <h6 class="m-0 fw-bold text-white"><i class="fas fa-clock-rotate-left me-2 text-info"></i>Últimos Cadastros</h6>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body p-0 text-white">
                 <table class="table table-dark-custom align-middle mb-0">
                     <thead>
                         <tr>
