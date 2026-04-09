@@ -127,8 +127,27 @@ require_once __DIR__ . '/functions.php';
                         <i class="fas fa-bell fs-5 text-secondary cursor-pointer"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.5rem;">3</span>
                     </div>
-                    <div class="avatar bg-accent-blue text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
-                        <?php echo strtoupper(substr($_SESSION['usuario_nome'], 0, 2)); ?>
+                    <div class="dropdown">
+                        <div class="avatar bg-accent-blue text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold cursor-pointer" style="width: 40px; height: 40px;" data-bs-toggle="dropdown" aria-expanded="false" role="button">
+                            <?php echo strtoupper(substr($_SESSION['usuario_nome'], 0, 2)); ?>
+                        </div>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="background: var(--bg-light-navy); min-width: 190px;">
+                            <li class="px-3 py-2 border-bottom border-secondary">
+                                <div class="fw-semibold text-white small"><?php echo htmlspecialchars($_SESSION['usuario_nome']); ?></div>
+                                <div class="text-secondary" style="font-size: 0.75rem;"><?php echo getPerfilLabel($_SESSION['usuario_perfil']); ?></div>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-white d-flex align-items-center gap-2 py-2" href="<?php echo APP_URL; ?>/pages/alterar_senha.php">
+                                    <i class="fas fa-lock text-info" style="width:16px;"></i> Alterar Senha
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider border-secondary my-1"></li>
+                            <li>
+                                <a class="dropdown-item text-danger d-flex align-items-center gap-2 py-2" href="<?php echo APP_URL; ?>/logout.php">
+                                    <i class="fas fa-power-off" style="width:16px;"></i> Sair
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </header>
