@@ -47,7 +47,7 @@ $query = "
     (SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as data, status, responsavel, categoria, tipo_contrato, qtd_anos FROM contratos $where)
     UNION
     (SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as data, status, responsavel, 'Hardware' as categoria, NULL as tipo_contrato, NULL as qtd_anos FROM garantias)
-    ORDER BY data ASC LIMIT 12
+    ORDER BY data ASC
 ";
 $items = $pdo->prepare($query);
 if ($cat_filter) {
