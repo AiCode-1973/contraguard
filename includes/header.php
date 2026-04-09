@@ -36,10 +36,28 @@ require_once __DIR__ . '/functions.php';
             </nav>
 
             <p class="nav-section-title">Análise</p>
+            <?php
+            $analise_pages = ['relatorios.php', 'dashboard_analise.php'];
+            $analise_open  = in_array(basename($_SERVER['PHP_SELF']), $analise_pages);
+            ?>
             <nav class="nav flex-column">
-                <a href="<?php echo APP_URL; ?>/pages/relatorios.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'relatorios.php' ? 'active' : ''; ?>">
-                    <i class="fas fa-chart-pie"></i> <span class="nav-text">Relatórios</span>
+                <a href="#submenu-analise" class="nav-link nav-submenu-toggle <?php echo $analise_open ? '' : 'collapsed'; ?>"
+                   data-bs-toggle="collapse" role="button" aria-expanded="<?php echo $analise_open ? 'true' : 'false'; ?>">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="nav-text">Análise <i class="fas fa-chevron-down submenu-chevron ms-auto"></i></span>
                 </a>
+                <div class="collapse <?php echo $analise_open ? 'show' : ''; ?>" id="submenu-analise">
+                    <nav class="nav flex-column nav-submenu">
+                        <a href="<?php echo APP_URL; ?>/pages/relatorios.php"
+                           class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'relatorios.php' ? 'active' : ''; ?>">
+                            <i class="fas fa-chart-pie"></i> <span class="nav-text">Relatórios</span>
+                        </a>
+                        <a href="<?php echo APP_URL; ?>/pages/dashboard_analise.php"
+                           class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard_analise.php' ? 'active' : ''; ?>">
+                            <i class="fas fa-gauge-high"></i> <span class="nav-text">Dashboard Analítico</span>
+                        </a>
+                    </nav>
+                </div>
             </nav>
 
             <?php if (isAdmin()): ?>

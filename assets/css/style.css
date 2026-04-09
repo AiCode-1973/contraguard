@@ -175,6 +175,36 @@ body {
     transform: translateX(5px);
 }
 
+/* Submenu Análise */
+.nav-submenu-toggle .submenu-chevron {
+    font-size: .7rem;
+    transition: transform 0.25s ease;
+    margin-left: auto;
+}
+.nav-submenu-toggle:not(.collapsed) .submenu-chevron {
+    transform: rotate(180deg);
+}
+.nav-submenu {
+    padding-left: 1rem;
+    border-left: 2px solid var(--border-color);
+    margin-left: 1rem;
+    margin-bottom: .5rem;
+}
+.nav-submenu .nav-link {
+    font-size: .9rem;
+    padding: .6rem .75rem;
+    margin-bottom: .25rem;
+    border-radius: 8px;
+    transform: none;
+}
+.nav-submenu .nav-link:hover,
+.nav-submenu .nav-link.active {
+    background: var(--bg-light-navy);
+    color: var(--electric-blue) !important;
+    border-color: var(--electric-blue);
+    transform: translateX(3px);
+}
+
 /* Main Content Area */
 .main-content {
     flex: 1;
