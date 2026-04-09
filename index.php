@@ -41,6 +41,12 @@ if ($cat_filter) {
 $total_contratos = $pdo->query("SELECT COUNT(*) FROM contratos")->fetchColumn();
 $vencendo_breve = $pdo->query("SELECT (SELECT COUNT(*) FROM contratos WHERE status = 'expiring') + (SELECT COUNT(*) FROM garantias WHERE status = 'expiring') as total")->fetchColumn();
 $vencidos = $pdo->query("SELECT (SELECT COUNT(*) FROM contratos WHERE status = 'expired') + (SELECT COUNT(*) FROM garantias WHERE status = 'expired') as total")->fetchColumn();
+$criticos_15d = $pdo->query("
+    SELECT
+        (SELECT COUNT(*) FROM contratos WHERE data_fim >= CURDATE() AND data_fim <= DATE_ADD(CURDATE(), INTERVAL 15 DAY))
+        + (SELECT COUNT(*) FROM garantias WHERE expira_garantia >= CURDATE() AND expira_garantia <= DATE_ADD(CURDATE(), INTERVAL 15 DAY))
+    as total
+")->fetchColumn();
 
 // Buscar Itens para o Grid
 $query = "
@@ -69,8 +75,19 @@ include 'includes/header.php';
     </div>
     <div class="stat-card">
         <p class="stat-label">Riscos Críticos</p>
-        <p class="stat-value text-danger"><?php echo $vencidos; ?></p>
-        <div class="text-secondary small mt-3">Requer atenção imediata</div>
+        <p class="stat-value text-danger"><?php echo $vencidos + $criticos_15d; ?></p>
+        <div class="text-secondary small mt-3">
+            <?php if ($vencidos > 0): ?>
+                <span class="text-danger fw-bold"><?php echo $vencidos; ?> vencido<?php echo $vencidos > 1 ? 's' : ''; ?></span>
+                <?php if ($criticos_15d > 0): ?> &nbsp;·&nbsp; <?php endif; ?>
+            <?php endif; ?>
+            <?php if ($criticos_15d > 0): ?>
+                <span class="text-warning fw-bold"><?php echo $criticos_15d; ?> vence<?php echo $criticos_15d > 1 ? 'm' : ''; ?> em até 15 dias</span>
+            <?php endif; ?>
+            <?php if ($vencidos == 0 && $criticos_15d == 0): ?>
+                <span>Nenhum risco crítico</span>
+            <?php endif; ?>
+        </div>
     </div>
     <div class="stat-card">
         <p class="stat-label">Em Renovação</p>
