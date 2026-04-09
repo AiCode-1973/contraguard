@@ -128,7 +128,7 @@ if (isset($_GET['msg'])) {
 // ── Buscar garantias com contagem de anexos ───────────────────────────────
 $where_g = '';
 $params_g = [];
-if (isGestor() || isVisualizador()) {
+if (!isAdmin()) {
     $where_g = 'WHERE g.usuario_id = ?';
     $params_g = [(int)$_SESSION['usuario_id']];
 }

@@ -147,7 +147,7 @@ $categorias_list = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")-
 // ── Buscar contratos com contagem de anexos ───────────────────────────────
 $where_usuario = '';
 $params_usuario = [];
-if (isGestor() || isVisualizador()) {
+if (!isAdmin()) {
     $where_usuario = 'WHERE c.usuario_id = ?';
     $params_usuario = [(int)$_SESSION['usuario_id']];
 }
