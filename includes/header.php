@@ -79,8 +79,10 @@ require_once __DIR__ . '/functions.php';
                         <option value="">Todas Categorias</option>
                         <?php
                         try {
-                            $cats_sidebar = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
-                        } catch (Exception $e) { $cats_sidebar = []; }
+                            $cats_db_sb = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
+                            $cats_sidebar = array_values(array_unique(array_merge(['Hardware', 'Outros', 'Serviços', 'Software'], $cats_db_sb)));
+                            sort($cats_sidebar);
+                        } catch (Exception $e) { $cats_sidebar = ['Hardware', 'Outros', 'Serviços', 'Software']; }
                         foreach ($cats_sidebar as $cs): ?>
                         <option value="<?php echo htmlspecialchars($cs); ?>"><?php echo htmlspecialchars($cs); ?></option>
                         <?php endforeach; ?>
