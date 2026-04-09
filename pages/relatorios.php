@@ -19,10 +19,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
     descricao VARCHAR(255) DEFAULT NULL,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-$cats_db = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
-$cats_default = ['Hardware', 'Outros', 'Serviços', 'Software'];
-$categorias_list = array_values(array_unique(array_merge($cats_default, $cats_db)));
-sort($categorias_list);
+$categorias_list = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
 
 $query_contratos = "SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as vencimento, status, valor, tipo_contrato as tipo_periodo, qtd_anos FROM contratos WHERE 1=1";
 $params_contratos = [];

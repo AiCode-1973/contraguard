@@ -11,7 +11,10 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
     descricao  VARCHAR(255) DEFAULT NULL,
     criado_em  DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-
+// Seed: garante que as categorias padrão existam
+$seed = ['Hardware', 'Outros', 'Serviços', 'Software'];
+$ins_seed = $pdo->prepare("INSERT IGNORE INTO categorias (nome) VALUES (?)");
+foreach ($seed as $s) { $ins_seed->execute([$s]); }
 $msg  = '';
 $tipo = '';
 $acao = $_POST['acao'] ?? '';
