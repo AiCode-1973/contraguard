@@ -12,7 +12,7 @@ $status = $_GET['status'] ?? '';
 $categoria = $_GET['categoria'] ?? '';
 $periodo = $_GET['periodo'] ?? '';
 
-$query_contratos = "SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as vencimento, status FROM contratos WHERE 1=1";
+$query_contratos = "SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as vencimento, status, valor FROM contratos WHERE 1=1";
 $params_contratos = [];
 
 if ($status) {
@@ -25,7 +25,7 @@ if ($categoria) {
     $params_contratos[] = $categoria;
 }
 
-$query_garantias = "SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as vencimento, status FROM garantias WHERE 1=1";
+$query_garantias = "SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as vencimento, status, NULL as valor FROM garantias WHERE 1=1";
 $params_garantias = [];
 
 if ($status) {
@@ -51,6 +51,25 @@ include '../includes/header.php';
     <button class="btn btn-danger" onclick="window.print()">
         <i class="fas fa-file-pdf me-2"></i> Exportar / Imprimir
     </button>
+</div>
+
+<!-- Cabeçalho exclusivo para impressao -->
+<div id="print-header" style="display:none;">
+    <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #000; padding-bottom:12px; margin-bottom:16px;">
+        <img src="<?php echo APP_URL; ?>/images/Logo_hse.png" alt="Logo" style="max-height:70px; max-width:200px;">
+        <div style="text-align:right;">
+            <div style="font-size:1.3rem; font-weight:bold;">Relatório de Contratos e Garantias</div>
+            <div style="font-size:0.85rem; color:#555;">Emitido em: <?php echo formatarData(date('Y-m-d')); ?> — <?php echo APP_NAME; ?></div>
+            <?php if ($status || $categoria): ?>
+            <div style="font-size:0.8rem; color:#777;">
+                Filtros:
+                <?php if ($status) echo 'Status: ' . getStatusLabel($status); ?>
+                <?php if ($status && $categoria) echo ' | '; ?>
+                <?php if ($categoria) echo 'Categoria: ' . htmlspecialchars($categoria); ?>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
 </div>
 
 <h4 class="fw-bold mb-4">Relatórios de Atividade</h4>
@@ -98,6 +117,7 @@ include '../includes/header.php';
                         <th class="ps-3">Tipo</th>
                         <th>Nome / Item</th>
                         <th>Fornecedor</th>
+                        <th>Valor</th>
                         <th>Vencimento</th>
                         <th>Status</th>
                     </tr>
@@ -106,8 +126,9 @@ include '../includes/header.php';
                     <?php foreach($dados as $d): ?>
                     <tr>
                         <td class="ps-3"><span class="badge bg-secondary"><?php echo $d['tipo']; ?></span></td>
-                        <td><strong><?php echo $d['nome']; ?></strong></td>
-                        <td><?php echo $d['fornecedor']; ?></td>
+                        <td><strong><?php echo htmlspecialchars($d['nome']); ?></strong></td>
+                        <td><?php echo htmlspecialchars($d['fornecedor']); ?></td>
+                        <td><?php echo !empty($d['valor']) ? 'R$ ' . number_format((float)$d['valor'], 2, ',', '.') : '<span class="text-secondary">—</span>'; ?></td>
                         <td><?php echo formatarData($d['vencimento']); ?></td>
                         <td>
                             <span class="badge badge-<?php echo $d['status']; ?>">
@@ -124,13 +145,19 @@ include '../includes/header.php';
 
 <style type="text/css">
 @media print {
-    .sidebar, .btn, form, .badge-info { display: none !important; }
-    .main-content { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
-    .card { border: none !important; }
+    .sidebar, .btn, form, .badge-info, .top-header, .dropdown { display: none !important; }
+    .main-content { margin-left: 0 !important; width: 100% !important; padding: 16px !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
     body { background: white !important; color: black !important; }
-    .text-white { color: black !important; }
-    .bg-navy, .bg-dark { background: white !important; }
-    .table { color: black !important; }
+    .text-white, h2, h4, strong { color: black !important; }
+    .bg-navy, .bg-dark, .card { background: white !important; }
+    .table { color: black !important; border-collapse: collapse !important; width: 100% !important; }
+    .table th, .table td { border: 1px solid #ccc !important; padding: 6px 10px !important; color: black !important; }
+    .table thead th { background: #f0f0f0 !important; font-weight: bold; }
+    .badge { border: 1px solid #999 !important; color: black !important; background: #eee !important; padding: 2px 6px !important; border-radius: 4px !important; }
+    .text-secondary { color: #555 !important; }
+    #print-header { display: block !important; }
+    .app-container { display: block !important; }
 }
 </style>
 
