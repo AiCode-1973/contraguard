@@ -96,6 +96,9 @@ require_once __DIR__ . '/functions.php';
                     <p class="text-secondary small"><?php echo formatarData(date('Y-m-d')); ?> | Status do Sistema: Online</p>
                 </div>
                 <div class="d-flex align-items-center gap-3">
+                    <button class="sidebar-toggle-btn" id="sidebarToggle" title="Recolher/expandir menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
                     <div class="search-wrapper">
                         <i class="fas fa-search"></i>
                         <input type="text" placeholder="Pesquisar em tudo...">
@@ -110,3 +113,15 @@ require_once __DIR__ . '/functions.php';
                 </div>
             </header>
             <?php endif; ?>
+<script>
+(function(){
+    const sidebar = document.querySelector('.sidebar');
+    const btn     = document.getElementById('sidebarToggle');
+    if (!sidebar || !btn) return;
+    if (localStorage.getItem('sidebarCollapsed') === '1') sidebar.classList.add('collapsed');
+    btn.addEventListener('click', function(){
+        sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+    });
+})();
+</script>

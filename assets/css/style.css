@@ -136,7 +136,40 @@ body {
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+    overflow: hidden;
 }
+
+/* Sidebar colapsado */
+.sidebar.collapsed {
+    width: 72px;
+    padding: 1.5rem 0.75rem;
+}
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .nav-section-title,
+.sidebar.collapsed .submenu-chevron,
+.sidebar.collapsed #submenu-analise,
+.sidebar.collapsed .sidebar-footer-form {
+    display: none !important;
+}
+.sidebar.collapsed .logo-container {
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+.sidebar.collapsed .nav-link {
+    justify-content: center;
+    padding: 0.85rem 0;
+}
+.sidebar.collapsed .nav-link i {
+    width: auto;
+    margin: 0;
+}
+.sidebar.collapsed .nav-link:hover,
+.sidebar.collapsed .nav-link.active {
+    transform: scale(1.15);
+}
+.sidebar.collapsed .mt-auto { display: none !important; }
 
 .logo-container {
     display: flex;
@@ -210,6 +243,31 @@ body {
     flex: 1;
     margin-left: 280px;
     padding: 2.5rem;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sidebar.collapsed ~ .main-content {
+    margin-left: 72px;
+}
+
+/* Botao toggle do sidebar */
+.sidebar-toggle-btn {
+    background: var(--bg-light-navy);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+.sidebar-toggle-btn:hover {
+    background: var(--bg-light-navy);
+    color: var(--electric-blue);
+    border-color: var(--electric-blue);
 }
 
 /* Header */
