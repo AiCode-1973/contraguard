@@ -12,7 +12,7 @@ $status = $_GET['status'] ?? '';
 $categoria = $_GET['categoria'] ?? '';
 $periodo = $_GET['periodo'] ?? '';
 
-$query_contratos = "SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as vencimento, status, valor FROM contratos WHERE 1=1";
+$query_contratos = "SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as vencimento, status, valor, tipo_contrato as tipo_periodo, qtd_anos FROM contratos WHERE 1=1";
 $params_contratos = [];
 
 if ($status) {
@@ -25,7 +25,7 @@ if ($categoria) {
     $params_contratos[] = $categoria;
 }
 
-$query_garantias = "SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as vencimento, status, NULL as valor FROM garantias WHERE 1=1";
+$query_garantias = "SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as vencimento, status, NULL as valor, tipo_garantia as tipo_periodo, qtd_anos FROM garantias WHERE 1=1";
 $params_garantias = [];
 
 if ($status) {
@@ -117,8 +117,7 @@ include '../includes/header.php';
                         <th class="ps-3">Tipo</th>
                         <th>Nome / Item</th>
                         <th>Fornecedor</th>
-                        <th>Valor</th>
-                        <th>Vencimento</th>
+                        <th>Valor</th>                        <th>Periodicidade</th>                        <th>Vencimento</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -129,6 +128,7 @@ include '../includes/header.php';
                         <td><strong><?php echo htmlspecialchars($d['nome']); ?></strong></td>
                         <td><?php echo htmlspecialchars($d['fornecedor']); ?></td>
                         <td><?php echo !empty($d['valor']) ? 'R$ ' . number_format((float)$d['valor'], 2, ',', '.') : '<span class="text-secondary">—</span>'; ?></td>
+                        <td><?php echo !empty($d['tipo_periodo']) ? htmlspecialchars(formatarTipoContrato($d['tipo_periodo'], $d['qtd_anos'])) : '<span class="text-secondary">—</span>'; ?></td>
                         <td><?php echo formatarData($d['vencimento']); ?></td>
                         <td>
                             <span class="badge badge-<?php echo $d['status']; ?>">
