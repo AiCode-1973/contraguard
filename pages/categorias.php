@@ -2,7 +2,7 @@
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 verificarLogin();
-if (!isAdmin()) { header('Location: ' . APP_URL . '/index.php'); exit; }
+if (!isAdmin() && !isGestor()) { header('Location: ' . APP_URL . '/index.php'); exit; }
 
 // ── Migração: cria tabela categorias ─────────────────────────────────────
 $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (

@@ -73,6 +73,13 @@ require_once __DIR__ . '/functions.php';
                     <i class="fas fa-tags"></i> <span class="nav-text">Categorias</span>
                 </a>
             </nav>
+            <?php elseif (isGestor()): ?>
+            <p class="nav-section-title">Administração</p>
+            <nav class="nav flex-column">
+                <a href="<?php echo APP_URL; ?>/pages/categorias.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'categorias.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-tags"></i> <span class="nav-text">Categorias</span>
+                </a>
+            </nav>
             <?php endif; ?>
 
             <div class="mt-auto sidebar-footer-form">
