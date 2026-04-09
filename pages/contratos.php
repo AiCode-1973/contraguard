@@ -126,6 +126,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ── Buscar categorias do banco ───────────────────────────────────────────
+$pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL UNIQUE,
+    descricao VARCHAR(255) DEFAULT NULL,
+    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+$categorias_list = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
+if (empty($categorias_list)) {
+    $categorias_list = ['Hardware', 'Serviços', 'Software', 'Outros'];
+}
+
 // ── Buscar contratos com contagem de anexos ───────────────────────────────
 $contratos_raw = $pdo->query(
     "SELECT c.*, COUNT(a.id) as total_anexos
@@ -263,10 +275,9 @@ include '../includes/header.php';
                         <div class="col-md-6 text-start">
                             <label class="form-label"><i class="fas fa-tags me-2"></i> Categoria</label>
                             <select name="categoria" id="edit_categoria" class="form-select">
-                                <option value="Software">Software</option>
-                                <option value="Hardware">Hardware</option>
-                                <option value="Serviços">Serviços</option>
-                                <option value="Outros">Outros</option>
+                                <?php foreach ($categorias_list as $cat_nome): ?>
+                                <option value="<?php echo htmlspecialchars($cat_nome); ?>"><?php echo htmlspecialchars($cat_nome); ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-6 text-start">

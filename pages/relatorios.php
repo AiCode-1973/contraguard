@@ -12,6 +12,18 @@ $status = $_GET['status'] ?? '';
 $categoria = $_GET['categoria'] ?? '';
 $periodo = $_GET['periodo'] ?? '';
 
+// Carregar categorias do banco
+$pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL UNIQUE,
+    descricao VARCHAR(255) DEFAULT NULL,
+    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+$categorias_list = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
+if (empty($categorias_list)) {
+    $categorias_list = ['Hardware', 'Serviços', 'Software', 'Outros'];
+}
+
 $query_contratos = "SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as vencimento, status, valor, tipo_contrato as tipo_periodo, qtd_anos FROM contratos WHERE 1=1";
 $params_contratos = [];
 
@@ -89,9 +101,11 @@ include '../includes/header.php';
                 <label class="form-label small text-uppercase fw-bold opacity-75">Categoria</label>
                 <select name="categoria" class="form-select border-secondary">
                     <option value="">Todas as Categorias</option>
-                    <option value="Software" <?php echo $categoria == 'Software' ? 'selected' : ''; ?>>Software</option>
-                    <option value="Hardware" <?php echo $categoria == 'Hardware' ? 'selected' : ''; ?>>Hardware</option>
-                    <option value="Serviços" <?php echo $categoria == 'Serviços' ? 'selected' : ''; ?>>Serviços</option>
+                    <?php foreach ($categorias_list as $cat_nome): ?>
+                    <option value="<?php echo htmlspecialchars($cat_nome); ?>" <?php echo $categoria == $cat_nome ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($cat_nome); ?>
+                    </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="col-md-3">

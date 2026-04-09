@@ -66,16 +66,24 @@ require_once __DIR__ . '/functions.php';
                 <a href="<?php echo APP_URL; ?>/pages/usuarios.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'usuarios.php' ? 'active' : ''; ?>">
                     <i class="fas fa-users-gear"></i> <span class="nav-text">Usuários</span>
                 </a>
+                <a href="<?php echo APP_URL; ?>/pages/categorias.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'categorias.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-tags"></i> <span class="nav-text">Categorias</span>
+                </a>
             </nav>
             <?php endif; ?>
 
-            <div class="mt-auto">
+            <div class="mt-auto sidebar-footer-form">
                 <p class="nav-section-title">Filtros Rápidos</p>
                 <form action="<?php echo APP_URL; ?>/index.php" method="GET" class="p-2">
                     <select name="categoria" class="form-select form-select-sm bg-light-navy text-white border-0 mb-2">
                         <option value="">Todas Categorias</option>
-                        <option value="Software">Software</option>
-                        <option value="Hardware">Hardware</option>
+                        <?php
+                        try {
+                            $cats_sidebar = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
+                        } catch (Exception $e) { $cats_sidebar = []; }
+                        foreach ($cats_sidebar as $cs): ?>
+                        <option value="<?php echo htmlspecialchars($cs); ?>"><?php echo htmlspecialchars($cs); ?></option>
+                        <?php endforeach; ?>
                     </select>
                     <button type="submit" class="btn btn-sm btn-info w-100 fw-bold">Aplicar</button>
                 </form>
