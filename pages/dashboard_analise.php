@@ -13,58 +13,63 @@ foreach (['valor','tipo_contrato','qtd_anos'] as $col) {
     }
 }
 
+// Filtro por usuário (não-admin só vê os próprios registros)
+$uid = (int)$_SESSION['usuario_id'];
+$uc  = !isAdmin() ? " AND usuario_id = $uid" : '';
+$ug  = !isAdmin() ? " AND usuario_id = $uid" : '';
+
 // ── KPIs gerais ───────────────────────────────────────────────────────────
-$total_contratos  = (int)$pdo->query("SELECT COUNT(*) FROM contratos")->fetchColumn();
-$total_garantias  = (int)$pdo->query("SELECT COUNT(*) FROM garantias")->fetchColumn();
+$total_contratos  = (int)$pdo->query("SELECT COUNT(*) FROM contratos WHERE 1=1$uc")->fetchColumn();
+$total_garantias  = (int)$pdo->query("SELECT COUNT(*) FROM garantias WHERE 1=1$ug")->fetchColumn();
 
-$valor_total      = (float)$pdo->query("SELECT COALESCE(SUM(valor),0) FROM contratos")->fetchColumn();
-$valor_ativos     = (float)$pdo->query("SELECT COALESCE(SUM(valor),0) FROM contratos WHERE status='active'")->fetchColumn();
+$valor_total      = (float)$pdo->query("SELECT COALESCE(SUM(valor),0) FROM contratos WHERE 1=1$uc")->fetchColumn();
+$valor_ativos     = (float)$pdo->query("SELECT COALESCE(SUM(valor),0) FROM contratos WHERE status='active'$uc")->fetchColumn();
 
-$contratos_ativos    = (int)$pdo->query("SELECT COUNT(*) FROM contratos WHERE status='active'")->fetchColumn();
-$contratos_expiring  = (int)$pdo->query("SELECT COUNT(*) FROM contratos WHERE status='expiring'")->fetchColumn();
-$contratos_expired   = (int)$pdo->query("SELECT COUNT(*) FROM contratos WHERE status='expired'")->fetchColumn();
+$contratos_ativos    = (int)$pdo->query("SELECT COUNT(*) FROM contratos WHERE status='active'$uc")->fetchColumn();
+$contratos_expiring  = (int)$pdo->query("SELECT COUNT(*) FROM contratos WHERE status='expiring'$uc")->fetchColumn();
+$contratos_expired   = (int)$pdo->query("SELECT COUNT(*) FROM contratos WHERE status='expired'$uc")->fetchColumn();
 
-$garantias_ativos    = (int)$pdo->query("SELECT COUNT(*) FROM garantias WHERE status='active'")->fetchColumn();
-$garantias_expiring  = (int)$pdo->query("SELECT COUNT(*) FROM garantias WHERE status='expiring'")->fetchColumn();
-$garantias_expired   = (int)$pdo->query("SELECT COUNT(*) FROM garantias WHERE status='expired'")->fetchColumn();
+$garantias_ativos    = (int)$pdo->query("SELECT COUNT(*) FROM garantias WHERE status='active'$ug")->fetchColumn();
+$garantias_expiring  = (int)$pdo->query("SELECT COUNT(*) FROM garantias WHERE status='expiring'$ug")->fetchColumn();
+$garantias_expired   = (int)$pdo->query("SELECT COUNT(*) FROM garantias WHERE status='expired'$ug")->fetchColumn();
 
 $criticos_15d = (int)$pdo->query("
     SELECT
-        (SELECT COUNT(*) FROM contratos WHERE data_fim >= CURDATE() AND data_fim <= DATE_ADD(CURDATE(), INTERVAL 15 DAY))
-        + (SELECT COUNT(*) FROM garantias WHERE expira_garantia >= CURDATE() AND expira_garantia <= DATE_ADD(CURDATE(), INTERVAL 15 DAY))
+        (SELECT COUNT(*) FROM contratos WHERE data_fim >= CURDATE() AND data_fim <= DATE_ADD(CURDATE(), INTERVAL 15 DAY)$uc)
+        + (SELECT COUNT(*) FROM garantias WHERE expira_garantia >= CURDATE() AND expira_garantia <= DATE_ADD(CURDATE(), INTERVAL 15 DAY)$ug)
     as total")->fetchColumn();
 
 // ── Contratos por categoria ───────────────────────────────────────────────
 $por_categoria = $pdo->query(
     "SELECT categoria, COUNT(*) as qtd, COALESCE(SUM(valor),0) as total_valor
-     FROM contratos GROUP BY categoria ORDER BY qtd DESC"
+     FROM contratos WHERE 1=1$uc GROUP BY categoria ORDER BY qtd DESC"
 )->fetchAll();
 
 // ── Contratos por tipo ────────────────────────────────────────────────────
 $por_tipo = $pdo->query(
     "SELECT COALESCE(tipo_contrato,'Não definido') as tipo, COUNT(*) as qtd
-     FROM contratos GROUP BY tipo_contrato ORDER BY qtd DESC"
+     FROM contratos WHERE 1=1$uc GROUP BY tipo_contrato ORDER BY qtd DESC"
 )->fetchAll();
 
 // ── Vencimentos nos próximos 90 dias (mês a mês) ─────────────────────────
 $venc_meses = $pdo->query("
     SELECT DATE_FORMAT(data_fim,'%Y-%m') as mes, COUNT(*) as qtd
     FROM contratos
-    WHERE data_fim BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)
+    WHERE data_fim BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)$uc
     GROUP BY mes ORDER BY mes ASC
 ")->fetchAll();
 
 // ── Top 5 contratos por valor ─────────────────────────────────────────────
 $top_valores = $pdo->query(
     "SELECT nome, fornecedor, valor, status, data_fim
-     FROM contratos WHERE valor IS NOT NULL ORDER BY valor DESC LIMIT 5"
+     FROM contratos WHERE valor IS NOT NULL$uc ORDER BY valor DESC LIMIT 5"
 )->fetchAll();
 
 // ── Últimos cadastros (contratos + garantias) ─────────────────────────────
 $ultimos = $pdo->query("
-    (SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as data_ref, status FROM contratos ORDER BY id DESC LIMIT 5)
+    (SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as data_ref, status FROM contratos WHERE 1=1$uc ORDER BY id DESC LIMIT 5)
     UNION
-    (SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as data_ref, status FROM garantias ORDER BY id DESC LIMIT 5)
+    (SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as data_ref, status FROM garantias WHERE 1=1$ug ORDER BY id DESC LIMIT 5)
     ORDER BY data_ref DESC LIMIT 8
 ")->fetchAll();
 

@@ -28,9 +28,14 @@ if (!in_array('valor', $colunas_idx)) {
     $pdo->exec("ALTER TABLE contratos ADD COLUMN valor DECIMAL(15,2) DEFAULT NULL");
 }
 
+// Filtro por usuário (não-admin só vê os próprios registros)
+$uid = (int)$_SESSION['usuario_id'];
+$uc  = !isAdmin() ? " AND usuario_id = $uid" : '';
+$ug  = !isAdmin() ? " AND usuario_id = $uid" : '';
+
 // Filtros
 $cat_filter = $_GET['categoria'] ?? '';
-$where = " WHERE 1=1";
+$where = " WHERE 1=1$uc";
 $params = [];
 if ($cat_filter) {
     $where .= " AND categoria = ?";
@@ -38,13 +43,13 @@ if ($cat_filter) {
 }
 
 // Métricas
-$total_contratos = $pdo->query("SELECT COUNT(*) FROM contratos")->fetchColumn();
-$vencendo_breve = $pdo->query("SELECT (SELECT COUNT(*) FROM contratos WHERE status = 'expiring') + (SELECT COUNT(*) FROM garantias WHERE status = 'expiring') as total")->fetchColumn();
-$vencidos = $pdo->query("SELECT (SELECT COUNT(*) FROM contratos WHERE status = 'expired') + (SELECT COUNT(*) FROM garantias WHERE status = 'expired') as total")->fetchColumn();
+$total_contratos = $pdo->query("SELECT COUNT(*) FROM contratos WHERE 1=1$uc")->fetchColumn();
+$vencendo_breve = $pdo->query("SELECT (SELECT COUNT(*) FROM contratos WHERE status = 'expiring'$uc) + (SELECT COUNT(*) FROM garantias WHERE status = 'expiring'$ug) as total")->fetchColumn();
+$vencidos = $pdo->query("SELECT (SELECT COUNT(*) FROM contratos WHERE status = 'expired'$uc) + (SELECT COUNT(*) FROM garantias WHERE status = 'expired'$ug) as total")->fetchColumn();
 $criticos_15d = $pdo->query("
     SELECT
-        (SELECT COUNT(*) FROM contratos WHERE data_fim >= CURDATE() AND data_fim <= DATE_ADD(CURDATE(), INTERVAL 15 DAY))
-        + (SELECT COUNT(*) FROM garantias WHERE expira_garantia >= CURDATE() AND expira_garantia <= DATE_ADD(CURDATE(), INTERVAL 15 DAY))
+        (SELECT COUNT(*) FROM contratos WHERE data_fim >= CURDATE() AND data_fim <= DATE_ADD(CURDATE(), INTERVAL 15 DAY)$uc)
+        + (SELECT COUNT(*) FROM garantias WHERE expira_garantia >= CURDATE() AND expira_garantia <= DATE_ADD(CURDATE(), INTERVAL 15 DAY)$ug)
     as total
 ")->fetchColumn();
 
@@ -52,7 +57,7 @@ $criticos_15d = $pdo->query("
 $query = "
     (SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as data, status, responsavel, categoria, tipo_contrato, qtd_anos FROM contratos $where)
     UNION
-    (SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as data, status, responsavel, 'Hardware' as categoria, tipo_garantia as tipo_contrato, qtd_anos FROM garantias)
+    (SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as data, status, responsavel, 'Hardware' as categoria, tipo_garantia as tipo_contrato, qtd_anos FROM garantias WHERE 1=1$ug)
     ORDER BY data ASC
 ";
 $items = $pdo->prepare($query);
@@ -70,7 +75,7 @@ include 'includes/header.php';
 <section class="stats-grid mb-5">
     <div class="stat-card">
         <p class="stat-label">Total Gerenciado</p>
-        <p class="stat-value"><?php echo $total_contratos + $pdo->query("SELECT COUNT(*) FROM garantias")->fetchColumn(); ?></p>
+        <p class="stat-value"><?php echo $total_contratos + $pdo->query("SELECT COUNT(*) FROM garantias WHERE 1=1$ug")->fetchColumn(); ?></p>
         <div class="text-info small mt-3 fw-bold"><i class="fas fa-arrow-up me-1"></i> +2 este mês</div>
     </div>
     <div class="stat-card">
