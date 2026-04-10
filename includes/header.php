@@ -121,16 +121,12 @@ require_once __DIR__ . '/functions.php';
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <div class="search-wrapper">
+                    <form action="<?php echo APP_URL; ?>/index.php" method="GET" class="search-wrapper mb-0">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Pesquisar em tudo...">
-                    </div>
-                    <div class="position-relative">
-                        <i class="fas fa-bell fs-5 text-secondary cursor-pointer"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.5rem;">3</span>
-                    </div>
+                        <input type="text" name="busca" placeholder="Pesquisar contratos e garantias..." value="<?php echo htmlspecialchars($_GET['busca'] ?? ''); ?>" autocomplete="off">
+                    </form>
                     <div class="dropdown">
-                        <div class="avatar bg-accent-blue text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold cursor-pointer" style="width: 40px; height: 40px;" data-bs-toggle="dropdown" aria-expanded="false" role="button">
+                        <div class="avatar rounded-circle d-flex align-items-center justify-content-center fw-bold cursor-pointer" style="width: 40px; height: 40px; background: linear-gradient(135deg, #00dfd8 0%, #00a8ff 100%); color: #0a192f; font-size: 0.85rem; letter-spacing: 0.5px; box-shadow: 0 0 0 2px rgba(0,223,216,0.35);" data-bs-toggle="dropdown" aria-expanded="false" role="button">
                             <?php echo strtoupper(substr($_SESSION['usuario_nome'], 0, 2)); ?>
                         </div>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="background: var(--bg-light-navy); min-width: 190px;">

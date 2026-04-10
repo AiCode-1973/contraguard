@@ -39,14 +39,21 @@ $ug  = " AND usuario_id = $uid";
 
 // Filtros
 $cat_filter = $_GET['categoria'] ?? '';
+$busca      = trim($_GET['busca'] ?? '');
 $where = " WHERE 1=1$uc";
 $params = [];
 if ($cat_filter) {
     $where .= " AND categoria = ?";
     $params[] = $cat_filter;
 }
+if ($busca) {
+    $where .= " AND (nome LIKE ? OR fornecedor LIKE ? OR responsavel LIKE ?)";
+    $params[] = "%$busca%";
+    $params[] = "%$busca%";
+    $params[] = "%$busca%";
+}
 
-// Métricas
+// Métricas (ignoram filtro de busca/categoria, refletem totais do usuário)
 $total_contratos = $pdo->query("SELECT COUNT(*) FROM contratos WHERE 1=1$uc")->fetchColumn();
 $vencendo_breve = $pdo->query("SELECT (SELECT COUNT(*) FROM contratos WHERE status = 'expiring'$uc) + (SELECT COUNT(*) FROM garantias WHERE status = 'expiring'$ug) as total")->fetchColumn();
 $vencidos = $pdo->query("SELECT (SELECT COUNT(*) FROM contratos WHERE status = 'expired'$uc) + (SELECT COUNT(*) FROM garantias WHERE status = 'expired'$ug) as total")->fetchColumn();
@@ -57,19 +64,25 @@ $criticos_15d = $pdo->query("
     as total
 ")->fetchColumn();
 
+// Busca em garantias: nome_equipamento, fornecedor, responsavel
+$where_g_busca = " WHERE 1=1$ug";
+$params_g = [];
+if ($busca) {
+    $where_g_busca .= " AND (nome_equipamento LIKE ? OR fornecedor LIKE ? OR responsavel LIKE ?)";
+    $params_g[] = "%$busca%";
+    $params_g[] = "%$busca%";
+    $params_g[] = "%$busca%";
+}
+
 // Buscar Itens para o Grid
 $query = "
     (SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as data, status, responsavel, categoria, tipo_contrato, qtd_anos FROM contratos $where)
     UNION
-    (SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as data, status, responsavel, 'Hardware' as categoria, tipo_garantia as tipo_contrato, qtd_anos FROM garantias WHERE 1=1$ug)
+    (SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as data, status, responsavel, 'Hardware' as categoria, tipo_garantia as tipo_contrato, qtd_anos FROM garantias $where_g_busca)
     ORDER BY data ASC
 ";
 $items = $pdo->prepare($query);
-if ($cat_filter) {
-    $items->execute($params);
-} else {
-    $items->execute();
-}
+$items->execute(array_merge($params, $params_g));
 $listagem = $items->fetchAll();
 
 include 'includes/header.php';
@@ -106,7 +119,16 @@ include 'includes/header.php';
 </section>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold mb-0">Alertas e Prazos Recentes</h4>
+    <div>
+        <h4 class="fw-bold mb-0">Alertas e Prazos Recentes</h4>
+        <?php if ($busca): ?>
+        <div class="small mt-1">
+            <span class="text-secondary">Resultado para: </span>
+            <span class="badge bg-info text-dark fw-semibold"><?php echo htmlspecialchars($busca); ?></span>
+            <a href="index.php<?php echo $cat_filter ? '?categoria='.urlencode($cat_filter) : ''; ?>" class="ms-2 text-secondary small"><i class="fas fa-xmark me-1"></i>Limpar</a>
+        </div>
+        <?php endif; ?>
+    </div>
     <div class="dropdown">
         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
             Ordenar por
