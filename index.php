@@ -28,6 +28,10 @@ if (!in_array('valor', $colunas_idx)) {
     $pdo->exec("ALTER TABLE contratos ADD COLUMN valor DECIMAL(15,2) DEFAULT NULL");
 }
 
+// Migração: registros sem usuario_id herdam o primeiro admin
+$pdo->exec("UPDATE contratos SET usuario_id = (SELECT id FROM usuarios WHERE nivel='admin' ORDER BY id LIMIT 1) WHERE usuario_id IS NULL");
+$pdo->exec("UPDATE garantias SET usuario_id = (SELECT id FROM usuarios WHERE nivel='admin' ORDER BY id LIMIT 1) WHERE usuario_id IS NULL");
+
 // Filtro por usuário: cada um vê apenas os próprios registros
 $uid = (int)$_SESSION['usuario_id'];
 $uc  = " AND usuario_id = $uid";
