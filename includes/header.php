@@ -89,13 +89,9 @@ require_once __DIR__ . '/functions.php';
                         <option value="">Todas Categorias</option>
                         <?php
                         try {
-                            if (isAdmin()) {
-                                $cats_sidebar = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
-                            } else {
-                                $cats_sb = $pdo->prepare("SELECT nome FROM categorias WHERE usuario_id IS NULL OR usuario_id = ? ORDER BY nome ASC");
-                                $cats_sb->execute([(int)$_SESSION['usuario_id']]);
-                                $cats_sidebar = $cats_sb->fetchAll(PDO::FETCH_COLUMN);
-                            }
+                            $cats_sb = $pdo->prepare("SELECT nome FROM categorias WHERE usuario_id = ? ORDER BY nome ASC");
+                            $cats_sb->execute([(int)$_SESSION['usuario_id']]);
+                            $cats_sidebar = $cats_sb->fetchAll(PDO::FETCH_COLUMN);
                         } catch (Exception $e) { $cats_sidebar = []; }
                         foreach ($cats_sidebar as $cs): ?>
                         <option value="<?php echo htmlspecialchars($cs); ?>"><?php echo htmlspecialchars($cs); ?></option>

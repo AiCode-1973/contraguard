@@ -7,21 +7,23 @@ if (!isAdmin() && !isGestor()) { header('Location: ' . APP_URL . '/index.php'); 
 // ── Migração: cria tabela categorias ─────────────────────────────────────
 $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
     id         INT AUTO_INCREMENT PRIMARY KEY,
-    nome       VARCHAR(100) NOT NULL UNIQUE,
+    nome       VARCHAR(100) NOT NULL,
     descricao  VARCHAR(255) DEFAULT NULL,
-    criado_em  DATETIME DEFAULT CURRENT_TIMESTAMP
+    usuario_id INT NOT NULL,
+    criado_em  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_cat_nome_uid (nome, usuario_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-// Migration: adicionar usuario_id (NULL = categoria global, visível a todos)
+// Garantir que a coluna usuario_id exista e seja NOT NULL (migra schemas antigos)
 $cols_cat = $pdo->query("SHOW COLUMNS FROM categorias")->fetchAll(PDO::FETCH_COLUMN);
 if (!in_array('usuario_id', $cols_cat)) {
-    $pdo->exec("ALTER TABLE categorias ADD COLUMN usuario_id INT DEFAULT NULL");
+    $pdo->exec("ALTER TABLE categorias ADD COLUMN usuario_id INT NOT NULL DEFAULT 0");
     try { $pdo->exec("ALTER TABLE categorias DROP INDEX nome"); } catch (Exception $e) {}
-    try { $pdo->exec("ALTER TABLE categorias ADD UNIQUE KEY uq_cat_nome_usuario (nome, usuario_id)"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE categorias ADD UNIQUE KEY uq_cat_nome_uid (nome, usuario_id)"); } catch (Exception $e) {}
+} else {
+    // Remove duplicatas NULL que possam ter sobrado de versão anterior
+    $pdo->exec("DELETE FROM categorias WHERE usuario_id IS NULL OR usuario_id = 0");
+    try { $pdo->exec("ALTER TABLE categorias MODIFY COLUMN usuario_id INT NOT NULL"); } catch (Exception $e) {}
 }
-// Seed: garante que as categorias padrão globais existam
-$seed = ['Hardware', 'Outros', 'Serviços', 'Software'];
-$ins_seed = $pdo->prepare("INSERT IGNORE INTO categorias (nome, usuario_id) VALUES (?, NULL)");
-foreach ($seed as $s) { $ins_seed->execute([$s]); }
 $msg  = '';
 $tipo = '';
 $acao = $_POST['acao'] ?? '';
@@ -54,17 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $msg = 'Categoria atualizada com sucesso.';
                 $tipo = 'success';
             } else {
-                // Verificar duplicata no escopo global + próprias
-                $cat_uid = isAdmin() ? null : (int)$_SESSION['usuario_id'];
-                if ($cat_uid === null) {
-                    $dup = $pdo->prepare("SELECT id FROM categorias WHERE nome = ? AND usuario_id IS NULL");
-                    $dup->execute([$nome]);
-                } else {
-                    $dup = $pdo->prepare("SELECT id FROM categorias WHERE nome = ? AND (usuario_id IS NULL OR usuario_id = ?)");
-                    $dup->execute([$nome, $cat_uid]);
-                }
+                // Sempre salva com o usuario_id do usuário logado
+                $cat_uid = (int)$_SESSION['usuario_id'];
+                $dup = $pdo->prepare("SELECT id FROM categorias WHERE nome = ? AND usuario_id = ?");
+                $dup->execute([$nome, $cat_uid]);
                 if ($dup->fetch()) {
-                    $msg = 'Já existe uma categoria com esse nome.';
+                    $msg = 'Você já possui uma categoria com esse nome.';
                     $tipo = 'danger';
                 } else {
                     $pdo->prepare("INSERT INTO categorias (nome, descricao, usuario_id) VALUES (?, ?, ?)")
@@ -77,11 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// ── Listar ────────────────────────────────────────────────────────────────
+// ── Listar: cada usuário vê apenas as suas; admin vê todas ───────────────
 if (isAdmin()) {
-    $categorias = $pdo->query("SELECT * FROM categorias ORDER BY (usuario_id IS NOT NULL), nome ASC")->fetchAll();
+    $categorias = $pdo->query("SELECT c.*, u.usuario as dono FROM categorias c LEFT JOIN usuarios u ON u.id = c.usuario_id ORDER BY u.usuario, c.nome ASC")->fetchAll();
 } else {
-    $cats_stmt = $pdo->prepare("SELECT * FROM categorias WHERE usuario_id IS NULL OR usuario_id = ? ORDER BY nome ASC");
+    $cats_stmt = $pdo->prepare("SELECT *, NULL as dono FROM categorias WHERE usuario_id = ? ORDER BY nome ASC");
     $cats_stmt->execute([(int)$_SESSION['usuario_id']]);
     $categorias = $cats_stmt->fetchAll();
 }
@@ -116,8 +113,9 @@ include '../includes/header.php';
         <table class="table table-dark-custom align-middle mb-0">
             <thead>
                 <tr>
-                    <th class="ps-4" style="width:40%">Nome</th>
+                    <th class="ps-4" style="width:35%">Nome</th>
                     <th>Descrição</th>
+                    <?php if (isAdmin()): ?><th>Usuário</th><?php endif; ?>
                     <th class="text-center" style="width:110px">Contratos</th>
                     <th class="text-center" style="width:120px">Ações</th>
                 </tr>
@@ -125,7 +123,7 @@ include '../includes/header.php';
             <tbody>
                 <?php if (empty($categorias)): ?>
                 <tr>
-                    <td colspan="4" class="text-center text-secondary p-5">
+                    <td colspan="<?php echo isAdmin() ? 5 : 4; ?>" class="text-center text-secondary p-5">
                         <i class="fas fa-tags fa-2x mb-2 d-block opacity-25"></i>
                         Nenhuma categoria cadastrada.
                     </td>
@@ -135,6 +133,9 @@ include '../includes/header.php';
                 <tr>
                     <td class="ps-4 fw-bold"><?php echo htmlspecialchars($cat['nome']); ?></td>
                     <td class="text-secondary"><?php echo htmlspecialchars($cat['descricao'] ?? '—'); ?></td>
+                    <?php if (isAdmin()): ?>
+                    <td class="text-secondary small"><?php echo htmlspecialchars($cat['dono'] ?? '—'); ?></td>
+                    <?php endif; ?>
                     <td class="text-center">
                         <span class="badge bg-secondary"><?php echo $uso_contratos[$cat['nome']] ?? 0; ?></span>
                     </td>
@@ -151,8 +152,6 @@ include '../includes/header.php';
                                 title="Excluir">
                             <i class="fas fa-trash"></i>
                         </button>
-                        <?php else: ?>
-                        <span class="badge bg-secondary opacity-75"><i class="fas fa-globe me-1"></i>Global</span>
                         <?php endif; ?>
                     </td>
                 </tr>

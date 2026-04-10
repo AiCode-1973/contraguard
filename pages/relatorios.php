@@ -20,9 +20,9 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 if (isAdmin()) {
-    $categorias_list = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
+    $categorias_list = $pdo->query("SELECT nome FROM categorias WHERE usuario_id = " . (int)$_SESSION['usuario_id'] . " ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
 } else {
-    $cats_r = $pdo->prepare("SELECT nome FROM categorias WHERE usuario_id IS NULL OR usuario_id = ? ORDER BY nome ASC");
+    $cats_r = $pdo->prepare("SELECT nome FROM categorias WHERE usuario_id = ? ORDER BY nome ASC");
     $cats_r->execute([(int)$_SESSION['usuario_id']]);
     $categorias_list = $cats_r->fetchAll(PDO::FETCH_COLUMN);
 }
