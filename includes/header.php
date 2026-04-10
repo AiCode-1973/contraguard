@@ -89,8 +89,14 @@ require_once __DIR__ . '/functions.php';
                         <option value="">Todas Categorias</option>
                         <?php
                         try {
-                            $cats_sb = $pdo->prepare("SELECT nome FROM categorias WHERE usuario_id = ? ORDER BY nome ASC");
-                            $cats_sb->execute([(int)$_SESSION['usuario_id']]);
+                            $_sid_sb = (int)($_SESSION['usuario_setor_id'] ?? 0);
+                            if ($_sid_sb > 0) {
+                                $cats_sb = $pdo->prepare("SELECT DISTINCT nome FROM categorias WHERE usuario_id IN (SELECT id FROM usuarios WHERE setor_id = ?) ORDER BY nome ASC");
+                                $cats_sb->execute([$_sid_sb]);
+                            } else {
+                                $cats_sb = $pdo->prepare("SELECT nome FROM categorias WHERE usuario_id = ? ORDER BY nome ASC");
+                                $cats_sb->execute([(int)$_SESSION['usuario_id']]);
+                            }
                             $cats_sidebar = $cats_sb->fetchAll(PDO::FETCH_COLUMN);
                         } catch (Exception $e) { $cats_sidebar = []; }
                         foreach ($cats_sidebar as $cs): ?>

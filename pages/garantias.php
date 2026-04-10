@@ -39,8 +39,11 @@ $msg  = '';
 if ($acao === 'excluir' && isset($_GET['id']) && canEdit()) {
     $id_del = (int)$_GET['id'];
     if (isGestor()) {
-        $chk = $pdo->prepare("SELECT id FROM garantias WHERE id = ? AND usuario_id = ?");
-        $chk->execute([$id_del, $_SESSION['usuario_id']]);
+        $sid_check = (int)($_SESSION['usuario_setor_id'] ?? 0);
+        $cond = $sid_check > 0
+            ? "AND usuario_id IN (SELECT id FROM usuarios WHERE setor_id = $sid_check)"
+            : "AND usuario_id = {$_SESSION['usuario_id']}";
+        $chk = $pdo->query("SELECT id FROM garantias WHERE id = $id_del $cond");
         if (!$chk->fetch()) { header('Location: garantias.php'); exit; }
     }
     $anexos_del = $pdo->prepare("SELECT nome_arquivo FROM garantia_anexos WHERE garantia_id = ?");
@@ -205,7 +208,7 @@ include '../includes/header.php';
                         </td>
                         <td class="pe-3">
                             <?php
-                            $pode_editar_g = isAdmin() || (isGestor() && (int)($g['usuario_id'] ?? 0) === (int)$_SESSION['usuario_id']);
+                            $pode_editar_g = isAdmin() || isGestor();
                             ?>
                             <?php if ($pode_editar_g): ?>
                             <button class="btn btn-sm btn-outline-info" onclick="editarGarantia(<?php echo htmlspecialchars(json_encode($g), ENT_QUOTES); ?>)">

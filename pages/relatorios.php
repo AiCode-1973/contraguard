@@ -23,13 +23,16 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
     descricao VARCHAR(255) DEFAULT NULL,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-if (isAdmin()) {
-    $categorias_list = $pdo->query("SELECT nome FROM categorias WHERE usuario_id = " . (int)$_SESSION['usuario_id'] . " ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
+// Categorias do setor
+$_sid_cats_r = (int)($_SESSION['usuario_setor_id'] ?? 0);
+if ($_sid_cats_r > 0) {
+    $cats_r = $pdo->prepare("SELECT DISTINCT nome FROM categorias WHERE usuario_id IN (SELECT id FROM usuarios WHERE setor_id = ?) ORDER BY nome ASC");
+    $cats_r->execute([$_sid_cats_r]);
 } else {
     $cats_r = $pdo->prepare("SELECT nome FROM categorias WHERE usuario_id = ? ORDER BY nome ASC");
     $cats_r->execute([(int)$_SESSION['usuario_id']]);
-    $categorias_list = $cats_r->fetchAll(PDO::FETCH_COLUMN);
 }
+$categorias_list = $cats_r->fetchAll(PDO::FETCH_COLUMN);
 
 $query_contratos = "SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as vencimento, status, valor, tipo_contrato as tipo_periodo, qtd_anos FROM contratos WHERE 1=1$uc";
 $params_contratos = [];

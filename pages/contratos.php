@@ -46,10 +46,13 @@ $msg  = '';
 // ── Excluir contrato ──────────────────────────────────────────────────────
 if ($acao === 'excluir' && isset($_GET['id']) && canEdit()) {
     $id_del = (int)$_GET['id'];
-    // Gestor só pode excluir seus próprios contratos
+    // Gestor: pode excluir qualquer contrato do seu setor
     if (isGestor()) {
-        $check_del = $pdo->prepare("SELECT id FROM contratos WHERE id = ? AND usuario_id = ?");
-        $check_del->execute([$id_del, $_SESSION['usuario_id']]);
+        $sid_check = (int)($_SESSION['usuario_setor_id'] ?? 0);
+        $cond = $sid_check > 0
+            ? "AND usuario_id IN (SELECT id FROM usuarios WHERE setor_id = $sid_check)"
+            : "AND usuario_id = {$_SESSION['usuario_id']}";
+        $check_del = $pdo->query("SELECT id FROM contratos WHERE id = $id_del $cond");
         if (!$check_del->fetch()) { header('Location: contratos.php'); exit; }
     }
     // Apaga arquivos físicos do contrato
@@ -142,13 +145,16 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
     descricao VARCHAR(255) DEFAULT NULL,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-if (isAdmin()) {
-    $categorias_list = $pdo->query("SELECT nome FROM categorias WHERE usuario_id = " . (int)$_SESSION['usuario_id'] . " ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
+// Categorias do setor (usuários do mesmo setor)
+$_sid_cats = (int)($_SESSION['usuario_setor_id'] ?? 0);
+if ($_sid_cats > 0) {
+    $cats_c = $pdo->prepare("SELECT DISTINCT nome FROM categorias WHERE usuario_id IN (SELECT id FROM usuarios WHERE setor_id = ?) ORDER BY nome ASC");
+    $cats_c->execute([$_sid_cats]);
 } else {
     $cats_c = $pdo->prepare("SELECT nome FROM categorias WHERE usuario_id = ? ORDER BY nome ASC");
     $cats_c->execute([(int)$_SESSION['usuario_id']]);
-    $categorias_list = $cats_c->fetchAll(PDO::FETCH_COLUMN);
 }
+$categorias_list = $cats_c->fetchAll(PDO::FETCH_COLUMN);
 
 // ── Buscar contratos com contagem de anexos ───────────────────────────────
 $uid = (int)$_SESSION['usuario_id'];
@@ -233,7 +239,7 @@ include '../includes/header.php';
                         </td>
                         <td class="pe-3">
                             <?php
-                            $pode_editar = isAdmin() || (isGestor() && (int)($c['usuario_id'] ?? 0) === (int)$_SESSION['usuario_id']);
+                            $pode_editar = isAdmin() || isGestor();
                             ?>
                             <?php if ($pode_editar): ?>
                             <button class="btn btn-sm btn-outline-info" onclick="editarContrato(<?php echo htmlspecialchars(json_encode($c), ENT_QUOTES); ?>)">
