@@ -126,12 +126,13 @@ if (isset($_GET['msg'])) {
 }
 
 // ── Buscar garantias com contagem de anexos ───────────────────────────────
-$where_g = '';
+$uid = (int)$_SESSION['usuario_id'];
+$sid = (int)($_SESSION['usuario_setor_id'] ?? 0);
+$uid_filter_g = $sid > 0
+    ? "IN (SELECT id FROM usuarios WHERE setor_id = $sid)"
+    : "= $uid";
+$where_g = "WHERE g.usuario_id $uid_filter_g";
 $params_g = [];
-if (!isAdmin()) {
-    $where_g = 'WHERE g.usuario_id = ?';
-    $params_g = [(int)$_SESSION['usuario_id']];
-}
 $stmt_g = $pdo->prepare(
     "SELECT g.*, COUNT(a.id) as total_anexos
      FROM garantias g

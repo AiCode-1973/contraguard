@@ -32,10 +32,14 @@ if (!in_array('valor', $colunas_idx)) {
 $pdo->exec("UPDATE contratos SET usuario_id = (SELECT id FROM usuarios WHERE nivel='admin' ORDER BY id LIMIT 1) WHERE usuario_id IS NULL");
 $pdo->exec("UPDATE garantias SET usuario_id = (SELECT id FROM usuarios WHERE nivel='admin' ORDER BY id LIMIT 1) WHERE usuario_id IS NULL");
 
-// Filtro por usuário: cada um vê apenas os próprios registros
+// Filtro por setor: vê registros de todos os usuários do mesmo setor
 $uid = (int)$_SESSION['usuario_id'];
-$uc  = " AND usuario_id = $uid";
-$ug  = " AND usuario_id = $uid";
+$sid = (int)($_SESSION['usuario_setor_id'] ?? 0);
+$uid_filter = $sid > 0
+    ? "IN (SELECT id FROM usuarios WHERE setor_id = $sid)"
+    : "= $uid";
+$uc = " AND usuario_id $uid_filter";
+$ug = " AND usuario_id $uid_filter";
 
 // Filtros
 $cat_filter = $_GET['categoria'] ?? '';

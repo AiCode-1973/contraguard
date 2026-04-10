@@ -7,10 +7,14 @@ $status    = $_GET['status'] ?? '';
 $categoria = $_GET['categoria'] ?? '';
 $periodo   = $_GET['periodo'] ?? '';
 
-// Filtro por usuário: cada um vê apenas os próprios registros
+// Filtro por setor: vê registros de todos os usuários do mesmo setor
 $uid = (int)$_SESSION['usuario_id'];
-$uc  = " AND usuario_id = $uid";
-$ug  = " AND usuario_id = $uid";
+$sid = (int)($_SESSION['usuario_setor_id'] ?? 0);
+$uid_filter = $sid > 0
+    ? "IN (SELECT id FROM usuarios WHERE setor_id = $sid)"
+    : "= $uid";
+$uc = " AND usuario_id $uid_filter";
+$ug = " AND usuario_id $uid_filter";
 
 // Carregar categorias do banco
 $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (

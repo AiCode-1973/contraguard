@@ -151,12 +151,13 @@ if (isAdmin()) {
 }
 
 // ── Buscar contratos com contagem de anexos ───────────────────────────────
-$where_usuario = '';
+$uid = (int)$_SESSION['usuario_id'];
+$sid = (int)($_SESSION['usuario_setor_id'] ?? 0);
+$uid_filter_c = $sid > 0
+    ? "IN (SELECT id FROM usuarios WHERE setor_id = $sid)"
+    : "= $uid";
+$where_usuario = "WHERE c.usuario_id $uid_filter_c";
 $params_usuario = [];
-if (!isAdmin()) {
-    $where_usuario = 'WHERE c.usuario_id = ?';
-    $params_usuario = [(int)$_SESSION['usuario_id']];
-}
 $stmt_contratos = $pdo->prepare(
     "SELECT c.*, COUNT(a.id) as total_anexos
      FROM contratos c
