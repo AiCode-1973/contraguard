@@ -11,9 +11,16 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
     descricao  VARCHAR(255) DEFAULT NULL,
     criado_em  DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-// Seed: garante que as categorias padrão existam
+// Migration: adicionar usuario_id (NULL = categoria global, visível a todos)
+$cols_cat = $pdo->query("SHOW COLUMNS FROM categorias")->fetchAll(PDO::FETCH_COLUMN);
+if (!in_array('usuario_id', $cols_cat)) {
+    $pdo->exec("ALTER TABLE categorias ADD COLUMN usuario_id INT DEFAULT NULL");
+    try { $pdo->exec("ALTER TABLE categorias DROP INDEX nome"); } catch (Exception $e) {}
+    try { $pdo->exec("ALTER TABLE categorias ADD UNIQUE KEY uq_cat_nome_usuario (nome, usuario_id)"); } catch (Exception $e) {}
+}
+// Seed: garante que as categorias padrão globais existam
 $seed = ['Hardware', 'Outros', 'Serviços', 'Software'];
-$ins_seed = $pdo->prepare("INSERT IGNORE INTO categorias (nome) VALUES (?)");
+$ins_seed = $pdo->prepare("INSERT IGNORE INTO categorias (nome, usuario_id) VALUES (?, NULL)");
 foreach ($seed as $s) { $ins_seed->execute([$s]); }
 $msg  = '';
 $tipo = '';
@@ -29,34 +36,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msg = 'O nome da categoria é obrigatório.';
         $tipo = 'danger';
     } else {
-        if ($acao === 'excluir' && $id > 0) {
-            $pdo->prepare("DELETE FROM categorias WHERE id = ?")->execute([$id]);
-            $msg = 'Categoria excluída com sucesso.';
-            $tipo = 'success';
-        } elseif ($acao === 'editar' && $id > 0) {
-            $stmt = $pdo->prepare("UPDATE categorias SET nome = ?, descricao = ? WHERE id = ?");
-            $stmt->execute([$nome, $descricao ?: null, $id]);
-            $msg = 'Categoria atualizada com sucesso.';
-            $tipo = 'success';
-        } else {
-            // Verificar duplicata
-            $dup = $pdo->prepare("SELECT id FROM categorias WHERE nome = ?");
-            $dup->execute([$nome]);
-            if ($dup->fetch()) {
-                $msg = 'Já existe uma categoria com esse nome.';
-                $tipo = 'danger';
-            } else {
-                $pdo->prepare("INSERT INTO categorias (nome, descricao) VALUES (?, ?)")
-                    ->execute([$nome, $descricao ?: null]);
-                $msg = 'Categoria cadastrada com sucesso.';
+        // Verifica permissão: não-admin só pode alterar categorias próprias
+        $perm_ok = true;
+        if (!isAdmin() && in_array($acao, ['excluir', 'editar']) && $id > 0) {
+            $perm_chk = $pdo->prepare("SELECT id FROM categorias WHERE id = ? AND usuario_id = ?");
+            $perm_chk->execute([$id, $_SESSION['usuario_id']]);
+            if (!$perm_chk->fetch()) { $perm_ok = false; $msg = 'Sem permissão para alterar esta categoria.'; $tipo = 'danger'; }
+        }
+        if ($perm_ok) {
+            if ($acao === 'excluir' && $id > 0) {
+                $pdo->prepare("DELETE FROM categorias WHERE id = ?")->execute([$id]);
+                $msg = 'Categoria excluída com sucesso.';
                 $tipo = 'success';
+            } elseif ($acao === 'editar' && $id > 0) {
+                $stmt = $pdo->prepare("UPDATE categorias SET nome = ?, descricao = ? WHERE id = ?");
+                $stmt->execute([$nome, $descricao ?: null, $id]);
+                $msg = 'Categoria atualizada com sucesso.';
+                $tipo = 'success';
+            } else {
+                // Verificar duplicata no escopo global + próprias
+                $cat_uid = isAdmin() ? null : (int)$_SESSION['usuario_id'];
+                if ($cat_uid === null) {
+                    $dup = $pdo->prepare("SELECT id FROM categorias WHERE nome = ? AND usuario_id IS NULL");
+                    $dup->execute([$nome]);
+                } else {
+                    $dup = $pdo->prepare("SELECT id FROM categorias WHERE nome = ? AND (usuario_id IS NULL OR usuario_id = ?)");
+                    $dup->execute([$nome, $cat_uid]);
+                }
+                if ($dup->fetch()) {
+                    $msg = 'Já existe uma categoria com esse nome.';
+                    $tipo = 'danger';
+                } else {
+                    $pdo->prepare("INSERT INTO categorias (nome, descricao, usuario_id) VALUES (?, ?, ?)")
+                        ->execute([$nome, $descricao ?: null, $cat_uid]);
+                    $msg = 'Categoria cadastrada com sucesso.';
+                    $tipo = 'success';
+                }
             }
         }
     }
 }
 
 // ── Listar ────────────────────────────────────────────────────────────────
-$categorias = $pdo->query("SELECT * FROM categorias ORDER BY nome ASC")->fetchAll();
+if (isAdmin()) {
+    $categorias = $pdo->query("SELECT * FROM categorias ORDER BY (usuario_id IS NOT NULL), nome ASC")->fetchAll();
+} else {
+    $cats_stmt = $pdo->prepare("SELECT * FROM categorias WHERE usuario_id IS NULL OR usuario_id = ? ORDER BY nome ASC");
+    $cats_stmt->execute([(int)$_SESSION['usuario_id']]);
+    $categorias = $cats_stmt->fetchAll();
+}
 
 // Contar uso em contratos
 $uso_contratos = [];
@@ -111,6 +139,8 @@ include '../includes/header.php';
                         <span class="badge bg-secondary"><?php echo $uso_contratos[$cat['nome']] ?? 0; ?></span>
                     </td>
                     <td class="text-center">
+                        <?php $pode_cat = isAdmin() || ((int)($cat['usuario_id'] ?? 0) === (int)$_SESSION['usuario_id']); ?>
+                        <?php if ($pode_cat): ?>
                         <button class="btn btn-sm btn-outline-info me-1"
                                 onclick="editarCategoria(<?php echo $cat['id']; ?>, '<?php echo addslashes(htmlspecialchars($cat['nome'])); ?>', '<?php echo addslashes(htmlspecialchars($cat['descricao'] ?? '')); ?>')"
                                 title="Editar">
@@ -121,6 +151,9 @@ include '../includes/header.php';
                                 title="Excluir">
                             <i class="fas fa-trash"></i>
                         </button>
+                        <?php else: ?>
+                        <span class="badge bg-secondary opacity-75"><i class="fas fa-globe me-1"></i>Global</span>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>

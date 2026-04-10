@@ -142,7 +142,13 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
     descricao VARCHAR(255) DEFAULT NULL,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-$categorias_list = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
+if (isAdmin()) {
+    $categorias_list = $pdo->query("SELECT nome FROM categorias ORDER BY nome ASC")->fetchAll(PDO::FETCH_COLUMN);
+} else {
+    $cats_c = $pdo->prepare("SELECT nome FROM categorias WHERE usuario_id IS NULL OR usuario_id = ? ORDER BY nome ASC");
+    $cats_c->execute([(int)$_SESSION['usuario_id']]);
+    $categorias_list = $cats_c->fetchAll(PDO::FETCH_COLUMN);
+}
 
 // ── Buscar contratos com contagem de anexos ───────────────────────────────
 $where_usuario = '';
