@@ -6,12 +6,12 @@ verificarLogin();
 // Lógica de Alertas
 function atualizarAlertas($pdo) {
     $pdo->exec("UPDATE contratos SET status = 'expired' WHERE data_fim < CURDATE()");
-    $pdo->exec("UPDATE contratos SET status = 'expiring' WHERE data_fim >= CURDATE() AND data_fim <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)");
-    $pdo->exec("UPDATE contratos SET status = 'active' WHERE data_fim > DATE_ADD(CURDATE(), INTERVAL 30 DAY)");
+    $pdo->exec("UPDATE contratos SET status = 'expiring' WHERE data_fim >= CURDATE() AND data_fim <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)");
+    $pdo->exec("UPDATE contratos SET status = 'active' WHERE data_fim > DATE_ADD(CURDATE(), INTERVAL 60 DAY)");
 
     $pdo->exec("UPDATE garantias SET status = 'expired' WHERE expira_garantia < CURDATE()");
-    $pdo->exec("UPDATE garantias SET status = 'expiring' WHERE expira_garantia >= CURDATE() AND expira_garantia <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)");
-    $pdo->exec("UPDATE garantias SET status = 'active' WHERE expira_garantia > DATE_ADD(CURDATE(), INTERVAL 30 DAY)");
+    $pdo->exec("UPDATE garantias SET status = 'expiring' WHERE expira_garantia >= CURDATE() AND expira_garantia <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)");
+    $pdo->exec("UPDATE garantias SET status = 'active' WHERE expira_garantia > DATE_ADD(CURDATE(), INTERVAL 60 DAY)");
 }
 
 atualizarAlertas($pdo);
@@ -114,7 +114,7 @@ include 'includes/header.php';
     <div class="stat-card">
         <p class="stat-label">Em Renovação</p>
         <p class="stat-value text-warning"><?php echo $vencendo_breve; ?></p>
-        <div class="text-secondary small mt-3">Próximos 30 dias</div>
+        <div class="text-secondary small mt-3">Próximos 60 dias</div>
     </div>
 </section>
 
