@@ -18,9 +18,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch();
 
         if ($user && password_verify($senha, $user['senha'])) {
-            // Normaliza nivel legado 'user' → 'gestor' antes de gravar na sessão
+            // Normaliza nivels legados antes de gravar na sessão
             $nivel = $user['nivel'];
-            if (!in_array($nivel, ['admin', 'gestor', 'visualizador'], true)) {
+            if ($nivel === 'viewer' || $nivel === '') {
+                $nivel = 'visualizador';
+                $pdo->prepare("UPDATE usuarios SET nivel = 'visualizador' WHERE id = ?")->execute([$user['id']]);
+            } elseif ($nivel === 'user') {
+                $nivel = 'gestor';
+                $pdo->prepare("UPDATE usuarios SET nivel = 'gestor' WHERE id = ?")->execute([$user['id']]);
+            } elseif (!in_array($nivel, ['admin', 'gestor', 'visualizador'], true)) {
                 $nivel = 'gestor';
                 $pdo->prepare("UPDATE usuarios SET nivel = 'gestor' WHERE id = ?")->execute([$user['id']]);
             }

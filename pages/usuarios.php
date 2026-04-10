@@ -20,7 +20,13 @@ if (!in_array('email', $colunas))
 if (!in_array('setor_id', $colunas))
     $pdo->exec("ALTER TABLE usuarios ADD COLUMN setor_id INT DEFAULT NULL");
 
-// Migrar valores antigos: 'user' → 'gestor'
+// Migrar coluna nivel de ENUM para VARCHAR para suportar gestor/visualizador
+$tipo_nivel = $pdo->query("SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'nivel'")->fetchColumn();
+if (stripos($tipo_nivel, 'enum') !== false || stripos($tipo_nivel, 'varchar(20)') !== false) {
+    $pdo->exec("ALTER TABLE usuarios MODIFY COLUMN nivel VARCHAR(30) NOT NULL DEFAULT 'gestor'");
+}
+// Migrar valores legados
+$pdo->exec("UPDATE usuarios SET nivel='visualizador' WHERE nivel='viewer' OR nivel=''");
 $pdo->exec("UPDATE usuarios SET nivel='gestor' WHERE nivel='user'");
 
 // ── Setores para select ───────────────────────────────────────────────────
