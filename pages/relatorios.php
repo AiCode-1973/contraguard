@@ -3,14 +3,14 @@ require_once '../includes/db.php';
 require_once '../includes/functions.php';
 verificarLogin();
 
-if (!isAdmin()) {
-    header('Location: ../index.php');
-    exit;
-}
-
-$status = $_GET['status'] ?? '';
+$status    = $_GET['status'] ?? '';
 $categoria = $_GET['categoria'] ?? '';
-$periodo = $_GET['periodo'] ?? '';
+$periodo   = $_GET['periodo'] ?? '';
+
+// Filtro por usuário (não-admin só vê os próprios registros)
+$uid = (int)$_SESSION['usuario_id'];
+$uc  = !isAdmin() ? " AND usuario_id = $uid" : '';
+$ug  = !isAdmin() ? " AND usuario_id = $uid" : '';
 
 // Carregar categorias do banco
 $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
@@ -27,7 +27,7 @@ if (isAdmin()) {
     $categorias_list = $cats_r->fetchAll(PDO::FETCH_COLUMN);
 }
 
-$query_contratos = "SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as vencimento, status, valor, tipo_contrato as tipo_periodo, qtd_anos FROM contratos WHERE 1=1";
+$query_contratos = "SELECT 'Contrato' as tipo, nome, fornecedor, data_fim as vencimento, status, valor, tipo_contrato as tipo_periodo, qtd_anos FROM contratos WHERE 1=1$uc";
 $params_contratos = [];
 
 if ($status) {
@@ -40,7 +40,7 @@ if ($categoria) {
     $params_contratos[] = $categoria;
 }
 
-$query_garantias = "SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as vencimento, status, NULL as valor, tipo_garantia as tipo_periodo, qtd_anos FROM garantias WHERE 1=1";
+$query_garantias = "SELECT 'Garantia' as tipo, nome_equipamento as nome, fornecedor, expira_garantia as vencimento, status, NULL as valor, tipo_garantia as tipo_periodo, qtd_anos FROM garantias WHERE 1=1$ug";
 $params_garantias = [];
 
 if ($status) {
