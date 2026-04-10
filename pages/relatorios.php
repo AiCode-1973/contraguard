@@ -7,10 +7,10 @@ $status    = $_GET['status'] ?? '';
 $categoria = $_GET['categoria'] ?? '';
 $periodo   = $_GET['periodo'] ?? '';
 
-// Filtro por usuário (não-admin só vê os próprios registros)
+// Filtro por usuário: cada um vê apenas os próprios registros
 $uid = (int)$_SESSION['usuario_id'];
-$uc  = !isAdmin() ? " AND usuario_id = $uid" : '';
-$ug  = !isAdmin() ? " AND usuario_id = $uid" : '';
+$uc  = " AND usuario_id = $uid";
+$ug  = " AND usuario_id = $uid";
 
 // Carregar categorias do banco
 $pdo->exec("CREATE TABLE IF NOT EXISTS categorias (
