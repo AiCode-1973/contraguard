@@ -107,6 +107,10 @@ require_once __DIR__ . '/functions.php';
                 </form>
                 
                 <hr class="text-secondary mx-2">
+                <a href="<?php echo APP_URL; ?>/images/POP — ContraGuard.pdf" target="_blank" class="nav-link">
+                    <i class="fas fa-file-alt"></i> <span class="nav-text">Manual / POP</span>
+                </a>
+                <hr class="text-secondary mx-2">
                 <a href="<?php echo APP_URL; ?>/logout.php" class="nav-link text-danger">
                     <i class="fas fa-power-off"></i> <span class="nav-text">Sair</span>
                 </a>
